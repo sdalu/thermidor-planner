@@ -52,13 +52,17 @@ module Thermidor
         # none; location: where that reference is, for a translation, nil
         # for none; held: its devices switched outside the planner and
         # held so (Radiator or Aircon), left out of the plan but watched;
-        # effects: what its energy rules do besides excluding (Effects).
+        # effects: what its energy rules do besides excluding (Effects);
+        # costs: what a kWh of heat costs from each device now, by label,
+        # in any one unit, for cheapest (none: a heat pump is taken as
+        # the cheapest).
         ROOM_DEFAULTS = { excluded: [], measured: nil, location: nil,
-                          held: [], effects: Effects.none }.freeze
+                          held: [], effects: Effects.none,
+                          costs: {} }.freeze
 
         Room = Data.define(:zone, :band, :strategy, :radiators, :aircons,
                            :excluded, :measured, :location, :held,
-                           :effects) do
+                           :effects, :costs) do
             def initialize(**) = super(**ROOM_DEFAULTS, **)
 
             # Every device, held or not.

@@ -17,8 +17,8 @@ thermostats and Airzone units. What made it theirs was naming, not
 logic: a device's label built from a tado serial, an Airzone system
 named from its host and number, tado's least target, the sensorium
 device names a translation looks up. Each became a field the caller
-fills in (`label`, `system`, `least`, `step`) or a role (`:radiator`,
-`:aircon`) the caller maps to its own names.
+fills in (`label`, `system`, `least`, `step`), and a translation is
+asked of the device itself, which the caller maps to its own names.
 
 ## Two device classes, by what they can do
 
@@ -58,7 +58,7 @@ in one room are two things to rank, and judging the class by one of
 them made the result depend on which was listed first (under quiet,
 both heated or neither). Ranking each device removes listing order from
 every rule; what stays class-bound is said where it holds (cheapest
-with no heat pump, a device without caps).
+with neither costs nor a heat pump, a device without caps).
 
 Devices all of one kind in a room have nothing to be ranked against, so
 they heat at the band whatever the strategy: two identical radiators
@@ -68,9 +68,17 @@ leave two loud radiators cold under quiet where one would heat.
 Equally gentle devices lead together under comfort: there is nothing
 to choose between them, and a tiebreak would bring order back.
 
-`cheapest` takes a heat pump (heats and cools on electricity) as the
-cheapest, until real costs are given: pricing it needs the caller's
-tariffs, and the planner has none.
+`cheapest` ranks by what a kWh of heat costs from each device, which
+the caller gives (`room.costs`): pricing needs its tariffs and each
+device's efficiency at the weather, and the planner has neither. It
+uses them only when every device taking part has one, since a device
+without a cost cannot be put above or below the others; then it falls
+back on a guess, a heat pump (heats and cools on electricity) taken as
+the cheapest, and with none the radiators.
+
+A translation is asked of each device, not of its class: two radiators
+in one room may sit by sensors that read the room differently, and only
+the caller knows which share one.
 
 ## One direction a heat pump
 

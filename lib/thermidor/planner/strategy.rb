@@ -19,8 +19,9 @@ module Thermidor
                          "others join once the room is a gap behind",
                 quick: "every source able to heat, at once",
                 quiet: "only the quiet sources",
-                cheapest: "the cheapest source alone (for now, a heat " \
-                          "pump: heats and cools on electricity)"
+                cheapest: "the cheapest source alone, by the costs " \
+                          "given, else a heat pump (heats and cools on " \
+                          "electricity)"
             }.freeze
 
             # What each strategy setting means, and its unit.

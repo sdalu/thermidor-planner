@@ -14,8 +14,8 @@ class PlanHeldTest < Minitest::Test
     # A translation for which a radiator's sensor reads 0.8 °C above the
     # room while heating, and a unit's as the room.
     class Warmer < AsIs
-        def target(room, role, setpoint, mode = nil)
-            return super unless role == :radiator
+        def target(room, device, setpoint, mode = nil)
+            return super unless device.is_a?(Thermidor::Planner::Radiator)
             Thermidor::Planner::Target.new(celsius: setpoint + 0.8, gap: 0.8)
         end
     end

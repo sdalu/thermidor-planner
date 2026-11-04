@@ -6,12 +6,14 @@ module Thermidor
         # the strategy's rule over each device's capabilities (caps,
         # Planner): quick, all of them; quiet, the quiet ones; comfort, the
         # gentlest by how they give their heat (ties together), the others
-        # a gap behind; cheapest, the heat pumps (heat and cool on
-        # electricity), else the radiators. A device takes part when it was
-        # read, can heat, on an energy not excluded now, as low as the
-        # band; devices all of one kind (the same caps) have nothing to be
-        # ranked against and heat at the band whatever the strategy. A
-        # device whose caps are not given follows its class's best.
+        # a gap behind; cheapest, the devices whose heat costs least when
+        # the room gives every one a cost (ties together), else the heat
+        # pumps (heat and cool on electricity), else the radiators. A
+        # device takes part when it was read, can heat, on an energy not
+        # excluded now, as low as the band; devices all of one kind (the
+        # same caps) have nothing to be ranked against and heat at the
+        # band whatever the strategy. A device whose caps are not given
+        # follows its class's best.
         class Roles
             # radiation and conduction first, forced air last.
             GENTLE = { "radiation" => 0, "conduction" => 0, "convection" => 1,
@@ -31,6 +33,7 @@ module Thermidor
             def initialize(room, heat, excluded = [], effects = Effects.none)
                 @excluded = excluded
                 @effects  = effects
+                @costs    = room.costs
                 classes = { radiator: room.radiators, aircon: room.aircons }
                 read = classes.flat_map do |role, devices|
                     devices.reject { unread?(it) }.map { [role, it] }
@@ -91,15 +94,26 @@ module Thermidor
                 GENTLE.fetch(device.caps.propagation.first, GENTLE.size)
             end
 
-            # The heat pumps alone; with none, the first class (ROLES)
-            # holding a device that takes part.
+            # The least costly, by the room's costs when every device has
+            # one; else the heat pumps alone; with none, the first class
+            # (ROLES) holding a device that takes part.
             def cheapest
+                return costed if @parts.all? { @costs[it.last.label] }
                 return by { pump?(it) ? 0.0 : nil } if
                     @parts.any? { pump?(it.last) }
+                first_class
+            end
+
+            def first_class
                 first = ROLES.find { |role| @parts.any? { it.first == role } }
                 @parts.to_h do |role, device|
                     [device.label, role == first ? 0.0 : nil]
                 end
+            end
+
+            def costed
+                least = @parts.map { @costs[it.last.label] }.min
+                by { @costs[it.label] == least ? 0.0 : nil }
             end
 
             def pump?(device)

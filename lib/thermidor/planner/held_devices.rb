@@ -64,11 +64,11 @@ module Thermidor
             def held_work(room, device)
                 if device.is_a?(Radiator)
                     return unless device.mode == :heat && device.target
-                    [:heat, in_room_terms(room, :radiator, device.target)]
+                    [:heat, in_room_terms(room, device, device.target)]
                 elsif device.on && device.setpoint
                     direction = Plan.direction_of(device.mode) or return
                     [direction,
-                     in_room_terms(room, :aircon, device.setpoint,
+                     in_room_terms(room, device, device.setpoint,
                                    direction)]
                 end
             end
@@ -76,8 +76,8 @@ module Thermidor
             # value, a device's own-sensor reading, less the gap
             # the translation would add to a room-terms target to get it;
             # value unchanged where nothing can be translated.
-            def in_room_terms(room, role, value, mode = nil)
-                gap = @translation.target(room, role, value, mode).gap
+            def in_room_terms(room, device, value, mode = nil)
+                gap = @translation.target(room, device, value, mode).gap
                 gap ? value - gap : value
             end
         end

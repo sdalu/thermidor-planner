@@ -26,7 +26,7 @@ module Thermidor
             # mode, the one it will hold is not known, so it is written.
             def aircon_setpoint(room, device, target, direction)
                 target = apart_from_held(room, target, direction)
-                found = @translation.target(room, :aircon, target, direction)
+                found = @translation.target(room, device, target, direction)
                 range = device.range_in(direction)
                 now = (device.setpoint if
                     Plan.direction_of(device.mode) == direction)
@@ -70,7 +70,7 @@ module Thermidor
 
             def radiator_target(room, device, label, target)
                 target = apart_from_held(room, target, :heat)
-                found = @translation.target(room, :radiator, target)
+                found = @translation.target(room, device, target)
                 return if Fit.kept?(device.target, found.celsius, device.step,
                                     device.range)
                 wanted = Fit.fit(found.celsius, device.step, device.range)

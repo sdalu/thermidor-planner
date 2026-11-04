@@ -9,12 +9,12 @@ module Thermidor
         # The translation Plan uses unless given one: every target as the
         # band's. A translation makes a room's setpoint into what a
         # device's own sensor reads when the room holds it; it answers
-        # target(room, role, setpoint, mode) with a Target, role being
-        # :radiator or :aircon and mode the unit's direction (:heat,
-        # :cool, nil for a radiator), and notes, what it could not
+        # target(room, device, setpoint, mode) with a Target, device being
+        # the Radiator or Aircon asked for and mode the unit's direction
+        # (:heat, :cool, nil for a radiator), and notes, what it could not
         # translate, said once.
         class AsIs
-            def target(_room, _role, setpoint, _mode = nil)
+            def target(_room, _device, setpoint, _mode = nil)
                 Target.new(celsius: setpoint, gap: nil)
             end
 
