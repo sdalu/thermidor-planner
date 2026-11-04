@@ -25,13 +25,15 @@ fills in (`label`, `system`, `least`, `step`) or a role (`:radiator`,
 A room has radiators, which only heat, and air-conditioning units,
 which heat or cool on a heat pump shared with other rooms. The two
 differ in kind, not only in brand: a unit's direction is not its own
-to choose, a radiator's is. Within a class, nothing depends on what the
-device is called: the strategies read capabilities (can it heat, cool,
-is it quiet, its energy, how it gives its heat), so a gas radiator and
-an electric one, or a heat pump on gas, are planned by what they are.
+to choose, a radiator's is. Nothing depends on what a device is
+called: the strategies read each device's capabilities (can it heat,
+cool, is it quiet, its energy, how it gives its heat), so a gas radiator
+and an electric one, or a heat pump on gas, are planned by what they
+are.
 
-A third class (floor heating, a stove) has no place yet: the strategies
-rank two classes, and a third would need its own rule against each.
+A third class (floor heating, a stove) has no place yet: its devices
+would rank like the others, but its direction and its least are its
+own, and would need their own rules.
 
 ## A band's side, not a target
 
@@ -42,16 +44,29 @@ keeps the room's others the same deadband from what it works to, for
 the same reason. Cooling is always the units', at the cool side; who
 heats, and how far below the heat side, is the strategy's.
 
-## Strategies are offsets from the heat side
+## Strategies are offsets from the heat side, device by device
 
-Each strategy gives each class an offset from the band's heat side, or
+Each strategy gives each device an offset from the band's heat side, or
 none (it does not heat): comfort leads with the gentlest, the others a
-gap behind; quick, all at once; quiet, the quiet ones; cheapest, a heat
-pump alone. Offsets compose: an energy rule's effects (prefer, avoid,
+gap behind; quick, all at once; quiet, the quiet ones; cheapest, the
+heat pumps. Offsets compose: an energy rule's effects (prefer, avoid,
 cap, raise) move them after the strategy, so a rule never needs to know
-the strategy, nor a strategy the rules. A class alone in a room heats at
-the band whatever the strategy, since there is nothing to rank it
-against.
+the strategy, nor a strategy the rules.
+
+The ranking is a device's, not its class's: a quiet and a loud radiator
+in one room are two things to rank, and judging the class by one of
+them made the result depend on which was listed first (under quiet,
+both heated or neither). Ranking each device removes listing order from
+every rule; what stays class-bound is said where it holds (cheapest
+with no heat pump, a device without caps).
+
+Devices all of one kind in a room have nothing to be ranked against, so
+they heat at the band whatever the strategy: two identical radiators
+under quiet heat, loud or not, as a class alone always did. "Alone"
+counts kinds, not devices, for that reason: counting devices would
+leave two loud radiators cold under quiet where one would heat.
+Equally gentle devices lead together under comfort: there is nothing
+to choose between them, and a tiebreak would bring order back.
 
 `cheapest` takes a heat pump (heats and cools on electricity) as the
 cheapest, until real costs are given: pricing it needs the caller's
@@ -85,14 +100,14 @@ rewritten. With a nil mode it gets no action, no vote, gives its class
 no part, and never stands for its system's mode, the rest of the house
 planned as if it were not there; a warning says it was left.
 
-## Energy is a device's, not its class's
+## A device takes part on its own
 
-The strategies rank classes, but an excluded energy is checked on each
-device: a room's gas radiator heats while its electric one rests at its
-least target, in whichever order they are listed. Ranking by device as
-well would need a rule for every pair inside a class; until a house
-mixes quiet and loud devices in one class, the first that may heat
-stands for the class's ranking.
+Whether a device heats at all is its own: read, able to heat, on an
+energy not excluded now, and able to go as low as the band. A room's
+gas radiator heats while its electric one rests at its least target; a
+unit whose least setpoint is above an away band is switched off rather
+than set to that least, above the band. A room votes for a heat pump
+only by a unit on it that may heat the room.
 
 ## On the device's step, moved by a step or not at all
 

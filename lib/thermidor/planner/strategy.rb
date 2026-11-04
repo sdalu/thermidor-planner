@@ -9,9 +9,9 @@ module Thermidor
         end
 
         # What a strategy asks of a room's radiators and air conditioning,
-        # as offsets from the band's heat side (nil: that device does not
-        # heat); cooling is always the air conditioning's, at the band's
-        # cool side.
+        # device by device, as targets from the band's heat side (nil: that
+        # device does not heat); cooling is always the air conditioning's,
+        # at the band's cool side.
         module Strategy
             # What each strategy is for, whatever the devices.
             ABOUT = {
@@ -38,31 +38,39 @@ module Thermidor
                 name == :comfort ? { gap: given.comfort } : {}
             end
 
+            # A device as uses stands it for its class.
+            Sample = Struct.new(:label, :caps, :range, :mode)
+
             # What `name` does with device classes of these capabilities
             # ({ :radiator or :aircon => caps }), in a room holding a
             # device of each: [[class, offset from the band's heat side],
             # ...], the lead first; the others take no part.
             def uses(name, settings, caps)
-                devices = caps.transform_values do |each|
-                    [Struct.new(:caps, :range).new(each, nil)]
+                devices = caps.to_h do |role, each|
+                    [role, [Sample.new(role.to_s, each, nil, :heat)]]
                 end
                 room = Room.new(zone: nil, band: nil, strategy: name,
                                 radiators: devices.fetch(:radiator, []),
                                 aircons: devices.fetch(:aircon, []))
                 Roles.new(room, 20.0).offsets(name, settings).compact
-                     .sort_by { -it.last }
+                     .sort_by { -it.last }.map { [it.first.to_sym, it.last] }
             end
 
-            # { radiator:, aircon: } heat targets of a room, nil for a
-            # class that does not heat: the strategy's rule over the
-            # capabilities of the classes able to heat the room (Roles).
+            # { device label => heat target, nil for none } over a room's
+            # radiators and units: the strategy's rule over each device's
+            # capabilities (Roles); all nil without a band.
             def heat(room, settings = StrategySettings.new)
-                heat = room.band&.heat or return { radiator: nil, aircon: nil }
-                offsets = Roles.new(room, heat, room.excluded, room.effects)
-                               .offsets(room.strategy.to_sym, settings)
-                %i[radiator aircon].to_h do |role|
-                    [role, offsets[role]&.then { (heat + it).round(1) }]
+                heat = room.band&.heat
+                offsets = heat ? offsets(room, heat, settings) : {}
+                (room.radiators + room.aircons).to_h do |device|
+                    offset = offsets[device.label]
+                    [device.label, offset && (heat + offset).round(1)]
                 end
+            end
+
+            def offsets(room, heat, settings)
+                Roles.new(room, heat, room.excluded, room.effects)
+                     .offsets(room.strategy.to_sym, settings)
             end
         end
     end

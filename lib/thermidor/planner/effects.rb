@@ -58,8 +58,9 @@ module Thermidor
                 end
             end
 
-            # Avoided leads back up; when none is left leading, the first
-            # class not avoided leads. Every class avoided: unchanged.
+            # Avoided leads back up; when none is left leading, those not
+            # avoided nearest the lead (nil farthest) lead. Every one
+            # avoided: unchanged.
             def step_back(offsets, energies, gap)
                 avoided, others = offsets.keys.partition do |role|
                     self.avoided.include?(energies[role])
@@ -67,7 +68,15 @@ module Thermidor
                 return offsets if avoided.empty? || others.empty?
                 stepped = behind(offsets, avoided, gap)
                 return stepped if others.any? { stepped[it] == 0.0 }
-                stepped.merge(others.first => 0.0)
+                stepped.merge(nearest(stepped, others).to_h { [it, 0.0] })
+            end
+
+            # Of roles, those whose offset is nearest the lead, nil
+            # farthest.
+            def nearest(offsets, roles)
+                height = ->(role) { offsets[role] || -Float::INFINITY }
+                top = roles.map(&height).max
+                roles.select { height.call(it) == top }
             end
 
             # The roles taking part a gap behind the lead.

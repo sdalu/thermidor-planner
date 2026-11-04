@@ -55,8 +55,17 @@ module Thermidor
                 [heats, cools]
             end
 
-            # Whether the strategy has room's `kind` of devices heat.
-            def heats?(room, kind) = Strategy.heat(room, @settings)[kind]
+            # Whether the strategy has one of room's `kind` of devices heat:
+            # for units, one on this heat pump.
+            def heats?(room, kind)
+                targets = Strategy.heat(room, @settings)
+                devices = if kind == :aircon
+                              room.aircons.select { it.source == @name }
+                          else
+                              room.radiators
+                          end
+                devices.any? { targets[it.label] }
+            end
 
             # The rooms needing what the direction does not give.
             def left_out(heats, cools)

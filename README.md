@@ -66,7 +66,7 @@ it, and the unit's setpoint is written for the mode it will run in.
 | `Room` | a zone's band (nil: nothing to hold, its devices left off) and strategy, its radiators and units; `measured` its temperature from a reference of its own (else its devices' average), `location` where that reference is, `excluded` the energies that may not heat now, `effects` what its energy rules do besides, `held` its devices switched outside the planner |
 
 A device read with a nil `mode` is unread: it gets no action, no vote,
-and gives its class no part. `caps` answers `heat`, `cool`, `quiet`,
+and takes no part. `caps` answers `heat`, `cool`, `quiet`,
 `energy` and `propagation` (most of its heat first: `radiation`,
 `conduction`, `convection`, `forced`).
 
@@ -93,28 +93,34 @@ within one step of what the device holds is left alone.
 
 | Strategy   | Heats with |
 | :--------- | :--------- |
-| `comfort`  | the gentlest class by propagation, the others a gap behind |
-| `quick`    | every class able to heat, at once |
-| `quiet`    | the quiet classes only |
-| `cheapest` | the cheapest class alone (for now, a heat pump: heats and cools on electricity) |
+| `comfort`  | the gentlest devices by propagation (equally gentle ones together), the others a gap behind |
+| `quick`    | every device able to heat, at once |
+| `quiet`    | the quiet devices only |
+| `cheapest` | the heat pumps alone (heat and cool on electricity), else the radiators |
 
-Cooling is always the units', at the band's cool side. A class takes
-part by its devices that may heat (can heat, on an energy not excluded
-now), the first of them standing for its capabilities; one with none,
-or none able to go as low as the band, takes no part, and one alone
-heats at the band whatever the strategy. A device that may not heat
-itself rests while the rest of its class heats: a radiator at its least
-target, a unit off. `Strategy.uses(name, settings, caps)` says what a strategy
-does with classes of given capabilities, the lead first.
+The strategies rank devices, each by its own capabilities, whatever
+order they are listed in. Cooling is always the units', at the band's
+cool side. A device takes part when it was read, can heat, on an
+energy not excluded now, as low as the band's heat side; one that does
+not rests, a radiator at its least target, a unit off. A room's devices
+all of one kind (the same caps) have nothing to be ranked against and
+heat at the band whatever the strategy. A device whose `caps` is nil
+follows the best of its class. `Strategy.heat(room, settings)` gives
+each device's target by label, so labels are unique in a room;
+`Strategy.uses(name, settings, caps)` says what a strategy does with
+one device of each class of given capabilities, the lead first.
 
-`Effects` are what a room's energy rules do: `preferred` energies lead,
-`avoided` ones back up, `caps` keep a class at most so far under the
-band, `raises` lift it over it (the room needing heat up to that).
+`Effects` are what a room's energy rules do, each device by its own
+energy: `preferred` energies lead, `avoided` ones back up (those nearest
+the lead taking it when none is left), `caps` keep a device at most so
+far under the band, `raises` lift it over it (the room needing heat up
+to that).
 
 ## Heat pumps
 
 The units on one heat pump run one direction. It comes from the rooms
-with a unit on it that is read and planned: on a conflict, rooms needing
+with a unit on it that is read and planned, needing heat only when one
+of its units on that heat pump may heat it: on a conflict, rooms needing
 heat that have radiators step aside; then the most rooms win, heat on a
 tie; with no need either way, the direction stays. A room left needing
 the other way is warned of. Each system's mode is read on a unit that
@@ -136,9 +142,10 @@ was set from outside, for the room.
 
 - Two device classes, radiators and units: a third (floor heating, a
   stove) has no role in the strategies.
-- Within a class, the first device that may heat stands for the
-  class's quietness and propagation: a quiet and a loud radiator in one
-  room are ranked as the first of them.
+- `cheapest` with no heat pump falls back on the radiators, by class:
+  with no prices there is nothing else to rank them by.
+- A translation is asked by class (role), so two radiators of a room
+  read through the same learned gap.
 - `cheapest` knows no prices: a heat pump is taken as the cheapest.
 - A unit holding a heat and a cool setpoint at once is planned one mode
   at a time.

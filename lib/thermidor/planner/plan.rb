@@ -137,18 +137,18 @@ module Thermidor
             # With no direction, a unit in fan, dry or auto is left running.
             def aircons(room, source)
                 direction = source.direction
-                target = aircon_target(room, direction)
+                targets = aircon_targets(room, direction)
                 room.aircons.select { it.source == source.name }
                     .reject { direction.nil? && RUNNING.include?(it.mode) }
-                    .each { aircon(room, it, target, direction) }
+                    .each { aircon(room, it, targets[it.label], direction) }
             end
 
-            # The setpoint a room's air conditioning should hold in
-            # `direction`, nil for off.
-            def aircon_target(room, direction)
-                return if direction.nil? || room.need == opposite(direction)
-                return room.band&.cool if direction == :cool
-                Strategy.heat(room, @settings)[:aircon]
+            # { label => the setpoint each unit should hold in `direction`,
+            # nil for off }.
+            def aircon_targets(room, direction)
+                return {} if direction.nil? || room.need == opposite(direction)
+                return Strategy.heat(room, @settings) if direction == :heat
+                room.aircons.to_h { [it.label, room.band&.cool] }
             end
 
             # A room needing heat whose devices may not heat now.
