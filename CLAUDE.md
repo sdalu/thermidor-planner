@@ -12,13 +12,13 @@ Ruby style: the `ruby` skill (4-space indentation, double quotes,
 
 - Releases are the owner's: never create or push a tag, nor move
   `VERSION`, unasked. Say a release is due and which number.
-- ClimatControl (~/Repos/ClimatControl, its own session's repo) is
-  the one user, naming `Thermidor::Planner` directly: a renamed
+- ClimatControl (~/Repos/ClimatControl) is the one user, naming `Thermidor::Planner` directly: a renamed
   constant, field or warning breaks it (its CLI tests assert the
   warnings' text). Run its gate against this tree before it moves its
   pin.
-- thermidor-schedule (~/Repos/thermidor-schedule) is the Thermidor
-  session's repo: schedule work goes there, never as a copy here.
+- Schedule work goes to thermidor-schedule
+  (~/Repos/thermidor-schedule), never as a copy here; its pin in the
+  Gemfile is the commit ClimatControl pins.
 - A constant inside a nested class of a test is not found through the
   test's `include Thermidor::Planner`: name it in full
   (plan_held_test.rb's `Warmer`).
