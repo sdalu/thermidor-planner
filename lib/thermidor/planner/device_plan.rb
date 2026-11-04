@@ -10,8 +10,10 @@ module Thermidor
 
             # One that could not be read is left as it is, as a radiator
             # is (#radiator): what it holds now is not known, so nil must
-            # not be read as off.
+            # not be read as off. Heating, one that may not heat itself is
+            # off (#own).
             def aircon(room, device, target, direction)
+                target = own(room, device, target) if direction == :heat
                 label = device.label
                 return unread(room, label) if device.mode.nil?
                 return change(room, label, :power, true, false) if
@@ -36,9 +38,20 @@ module Thermidor
                          found.with(celsius: wanted))
             end
 
+            # The class's target; a radiator that may not heat (on an
+            # energy excluded now) goes to its least however it is listed.
             def radiators(room)
                 target = Strategy.heat(room, @settings)[:radiator]
-                room.radiators.each { radiator(room, it, target) }
+                room.radiators.each do |device|
+                    radiator(room, device, own(room, device, target))
+                end
+            end
+
+            # target, or nil for a device of the class that may not heat
+            # itself; one whose caps are not given takes the class's.
+            def own(room, device, target)
+                return target unless target && device.caps
+                target if Roles.heats?(device, room.excluded)
             end
 
             # Not heating is the least target, not off: a thermostat

@@ -63,7 +63,7 @@ it, and the unit's setpoint is written for the mode it will run in.
 | :--- | :--------- |
 | `Radiator` | a thermostat on a radiator: heats only; mode `:off` or `:heat`, a target on its step and range, `least` the target standing for "not heating" when the range gives none |
 | `Aircon` | an air-conditioning unit: on or off, a mode (`:heat`, `:cool`, `:aux`, `:fan`, `:dry`, `:auto`, `:stop`), a setpoint; `system` the label of the units sharing its mode (set through the `master`), `source` the heat pump its system runs on; `ranges` its setpoints by mode |
-| `Room` | a zone's band and strategy, its radiators and units; `measured` its temperature from a reference of its own (else its devices' average), `location` where that reference is, `excluded` the energies that may not heat now, `effects` what its energy rules do besides, `held` its devices switched outside the planner |
+| `Room` | a zone's band (nil: nothing to hold, its devices left off) and strategy, its radiators and units; `measured` its temperature from a reference of its own (else its devices' average), `location` where that reference is, `excluded` the energies that may not heat now, `effects` what its energy rules do besides, `held` its devices switched outside the planner |
 
 A device read with a nil `mode` is unread: it gets no action, no vote,
 and gives its class no part. `caps` answers `heat`, `cool`, `quiet`,
@@ -98,10 +98,13 @@ within one step of what the device holds is left alone.
 | `quiet`    | the quiet classes only |
 | `cheapest` | the cheapest class alone (for now, a heat pump: heats and cools on electricity) |
 
-Cooling is always the units', at the band's cool side. A class that
-cannot heat, cannot go as low as the band, or runs on an energy
-excluded now takes no part; one alone heats at the band whatever the
-strategy. `Strategy.uses(name, settings, caps)` says what a strategy
+Cooling is always the units', at the band's cool side. A class takes
+part by its devices that may heat (can heat, on an energy not excluded
+now), the first of them standing for its capabilities; one with none,
+or none able to go as low as the band, takes no part, and one alone
+heats at the band whatever the strategy. A device that may not heat
+itself rests while the rest of its class heats: a radiator at its least
+target, a unit off. `Strategy.uses(name, settings, caps)` says what a strategy
 does with classes of given capabilities, the lead first.
 
 `Effects` are what a room's energy rules do: `preferred` energies lead,
@@ -114,9 +117,10 @@ The units on one heat pump run one direction. It comes from the rooms
 with a unit on it that is read and planned: on a conflict, rooms needing
 heat that have radiators step aside; then the most rooms win, heat on a
 tie; with no need either way, the direction stays. A room left needing
-the other way is warned of. Each system's mode is set through its
-master; a system in fan or dry runs without the heat pump and is left
-running.
+the other way is warned of. Each system's mode is read on a unit that
+was read, its master's first, and set through its master; a system in
+fan or dry runs without the heat pump and is left running. A heat pump
+is named by whatever its units' `source` holds, said as text.
 
 ## Held devices and drifts
 
@@ -132,6 +136,9 @@ was set from outside, for the room.
 
 - Two device classes, radiators and units: a third (floor heating, a
   stove) has no role in the strategies.
+- Within a class, the first device that may heat stands for the
+  class's quietness and propagation: a quiet and a loud radiator in one
+  room are ranked as the first of them.
 - `cheapest` knows no prices: a heat pump is taken as the cheapest.
 - A unit holding a heat and a cool setpoint at once is planned one mode
   at a time.

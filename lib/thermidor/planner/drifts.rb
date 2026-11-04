@@ -93,9 +93,9 @@ module Thermidor
             end
 
             # Each system's mode, read on any of its units (its master's
-            # when there): every unit reports it.
+            # when there): every unit reports it. One unread is no reading.
             def modes(rooms, last)
-                rooms.flat_map(&:devices).grep(Aircon)
+                rooms.flat_map(&:devices).grep(Aircon).select(&:mode)
                      .sort_by { it.master ? 0 : 1 }.uniq(&:system)
                      .filter_map { mode(it, last) }
             end

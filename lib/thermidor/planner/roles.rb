@@ -17,6 +17,12 @@ module Thermidor
             GENTLE = { "radiation" => 0, "conduction" => 0, "convection" => 1,
                        "forced" => 2 }.freeze
 
+            # Whether a device may heat: it can, on an energy not excluded.
+            def self.heats?(device, excluded)
+                caps = device.caps or return false
+                caps.heat && !excluded.include?(caps.energy)
+            end
+
             # excluded: energies the devices may not heat on now; effects:
             # what the rules do besides (Effects).
             def initialize(room, heat, excluded = [], effects = Effects.none)
@@ -52,16 +58,17 @@ module Thermidor
 
             def quiet = @classes.transform_values { it.quiet ? 0.0 : nil }
 
-            # [role, capabilities] of a class able to heat to `heat`: an
-            # unread device (nil mode) takes no part in
-            # deciding it, as if it were not there, so it cannot make the
-            # class able alone.
+            # [role, capabilities] of a class able to heat to `heat`, by
+            # its devices that may heat (Roles.heats?), the first's
+            # capabilities standing for the class: an unread device (nil
+            # mode) takes no part in deciding it, as if it were not there,
+            # so it cannot make the class able alone.
             def able(role, devices, heat)
-                read = devices.reject { unread?(it) }
-                caps = read.first&.caps or return
-                return unless caps.heat && !@excluded.include?(caps.energy)
-                return if read.all? { too_warm?(it, heat) }
-                [role, caps]
+                heating = devices.select do |device|
+                    !unread?(device) && Roles.heats?(device, @excluded)
+                end
+                return if heating.all? { too_warm?(it, heat) }
+                [role, heating.first.caps]
             end
 
             def unread?(device) = device.respond_to?(:mode) && device.mode.nil?

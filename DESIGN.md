@@ -81,9 +81,18 @@ least is the device's range's when it reports one, else the caller's
 A device the caller could not read is kept, with nil fields, rather
 than dropped, and left as it is: what it holds now is not known, so its
 nil must not be read as off and switched on, nor its nil target
-rewritten. With a nil mode it gets no action, no vote, and gives its
-class no part, the rest of the room planned as if it were not there; a
-warning says it was left.
+rewritten. With a nil mode it gets no action, no vote, gives its class
+no part, and never stands for its system's mode, the rest of the house
+planned as if it were not there; a warning says it was left.
+
+## Energy is a device's, not its class's
+
+The strategies rank classes, but an excluded energy is checked on each
+device: a room's gas radiator heats while its electric one rests at its
+least target, in whichever order they are listed. Ranking by device as
+well would need a rule for every pair inside a class; until a house
+mixes quiet and loud devices in one class, the first that may heat
+stands for the class's ranking.
 
 ## On the device's step, moved by a step or not at all
 

@@ -81,9 +81,10 @@ module Thermidor
             end
 
             # :heat below the band (lifted by a raise on one of its
-            # devices' energies), :cool above it, else nil.
+            # devices' energies), :cool above it, else nil; nil without a
+            # band.
             def need
-                now = temperature or return
+                now = band && temperature or return
                 return :heat if band.heat && now < band.heat + lift
                 :cool if band.cool && now > band.cool
             end

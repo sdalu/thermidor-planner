@@ -14,7 +14,8 @@ module Thermidor
             # Nothing held.
             FREE = Object.new.freeze
 
-            attr_reader :direction, :unserved, :overridden
+            # name: the heat pump's, as its units' source gives it.
+            attr_reader :name, :direction, :unserved, :overridden
 
             def initialize(name, rooms, current,
                            settings = StrategySettings.new, held: FREE)
@@ -30,7 +31,7 @@ module Thermidor
                 @overridden = held_against(rooms)
             end
 
-            def to_s = @name
+            def to_s = @name.to_s
 
             private
 

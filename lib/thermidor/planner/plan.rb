@@ -86,18 +86,19 @@ module Thermidor
                                       .compact.first
             end
 
-            # A unit standing for each system, its master zone's when bound:
-            # the mode is the system's, every zone reports it, and it is
-            # written to the master zone whichever is named.
+            # A unit standing for each system, its master's when there: the
+            # mode is the system's, every unit reports it, and it is set
+            # through the master whichever stands. One unread (nil mode)
+            # never stands: its system's mode would read as unknown.
             def masters(rooms, source)
-                rooms.flat_map { units(it, source) }
+                rooms.flat_map { units(it, source) }.select(&:mode)
                      .sort_by { it.master ? 0 : 1 }
                      .uniq(&:system)
                      .reject { @aside.include?(it.system) }
             end
 
             def pump(source, rooms)
-                masters(rooms, source.to_s).each { mode(source, it) }
+                masters(rooms, source.name).each { mode(source, it) }
                 rooms.each { aircons(it, source) }
                 source.unserved.each do |room|
                     @warnings << "#{room.zone}: needs #{room.need}, but " \
@@ -137,7 +138,7 @@ module Thermidor
             def aircons(room, source)
                 direction = source.direction
                 target = aircon_target(room, direction)
-                room.aircons.select { it.source == source.to_s }
+                room.aircons.select { it.source == source.name }
                     .reject { direction.nil? && RUNNING.include?(it.mode) }
                     .each { aircon(room, it, target, direction) }
             end
@@ -146,7 +147,7 @@ module Thermidor
             # `direction`, nil for off.
             def aircon_target(room, direction)
                 return if direction.nil? || room.need == opposite(direction)
-                return room.band.cool if direction == :cool
+                return room.band&.cool if direction == :cool
                 Strategy.heat(room, @settings)[:aircon]
             end
 

@@ -57,7 +57,7 @@ module Thermidor
             # class that does not heat: the strategy's rule over the
             # capabilities of the classes able to heat the room (Roles).
             def heat(room, settings = StrategySettings.new)
-                heat = room.band.heat or return { radiator: nil, aircon: nil }
+                heat = room.band&.heat or return { radiator: nil, aircon: nil }
                 offsets = Roles.new(room, heat, room.excluded, room.effects)
                                .offsets(room.strategy.to_sym, settings)
                 %i[radiator aircon].to_h do |role|
