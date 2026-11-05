@@ -36,12 +36,11 @@ module Thermidor
         # units sharing its mode, which is set through its master unit;
         # source: the heat pump its system runs on, whose direction every
         # unit on it shares. range: its setpoints now, in the mode it is
-        # in; ranges: by mode (:heat, :cool), those it gives;
-        # switched_ago: minutes since its power last changed, nil unknown.
+        # in; ranges: by mode (:heat, :cool), those it gives.
         Aircon = Data.define(:ref, :label, :caps, :system, :source, :master,
                              :temperature, :on, :mode, :setpoint, :range,
-                             :ranges, :step, :switched_ago) do
-            def initialize(ranges: {}, switched_ago: nil, **) = super
+                             :ranges, :step) do
+            def initialize(ranges: {}, **) = super
 
             # The setpoints it takes in direction.
             def range_in(direction) = ranges.to_h.fetch(direction, range)
@@ -122,7 +121,7 @@ require_relative "planner/source"
 require_relative "planner/actions"
 require_relative "planner/fit"
 require_relative "planner/device_plan"
-require_relative "planner/cycle_plan"
+require_relative "planner/pump_cycle"
 require_relative "planner/pump_plan"
 require_relative "planner/held_devices"
 require_relative "planner/plan"

@@ -62,7 +62,7 @@ it, and the unit's setpoint is written for the mode it will run in.
 | Type | What it is |
 | :--- | :--------- |
 | `Radiator` | a thermostat on a radiator: heats only; mode `:off` or `:heat`, a target on its step and range, `least` the target standing for "not heating" when the range gives none; a range open at an end (`nil..25.0`) is no bound on that side |
-| `Aircon` | an air-conditioning unit: on or off, a mode (`:heat`, `:cool`, `:aux`, `:fan`, `:dry`, `:auto`, `:stop`), a setpoint; `system` the label of the units sharing its mode (set through the `master`), `source` the heat pump its system runs on; `ranges` its setpoints by mode; `switched_ago` the minutes since its power last changed (nil: unknown) |
+| `Aircon` | an air-conditioning unit: on or off, a mode (`:heat`, `:cool`, `:aux`, `:fan`, `:dry`, `:auto`, `:stop`), a setpoint; `system` the label of the units sharing its mode (set through the `master`), `source` the heat pump its system runs on; `ranges` its setpoints by mode |
 | `Room` | a zone's band (nil: nothing to hold, its devices left off) and strategy, its radiators and units; `measured` its temperature from a reference of its own (else its devices' average), `location` where that reference is, `excluded` the energies that may not heat now, `effects` what its energy rules do besides, `costs` what a kWh of heat costs from each device now (by label, any one unit), `outside` the outside °C now (nil: unknown), `held` its devices switched outside the planner |
 
 A device read with a nil `mode` is unread: it gets no action, no vote,
@@ -72,19 +72,19 @@ and takes no part. `caps` answers `heat`, `cool`, `quiet`,
 
 ## What it gives
 
-`Plan.new(rooms, settings:, translation:, held:, aside:).run` returns a
+`Plan.new(rooms, settings:, translation:, pumps:, aside:).run` returns a
 `Result`: `actions`, each an `Action` (zone, device label, setting
 `:mode`, `:power`, `:target` or `:setpoint`, from, to, offset, why), and
 `warnings`, sentences about what it could not do.
 
 - `settings`: a `StrategySettings`, comfort's gap (0.5 °C) and `pump`,
-  a `PumpSettings` saying how a heat pump changes direction (below).
+  a `PumpSettings` saying how a heat pump is run (below).
 - `translation`: makes the band's side into what a device's own sensor
   reads when the room holds it; answers `target(room, device, setpoint,
   mode)` for each device with a `Target` (`celsius`, `gap`), and
   `notes`. `AsIs`, the default, sends the band's side as is.
-- `held`: `{ source => :heat, :cool or nil }`, heat pumps' directions
-  set outside and held.
+- `pumps`: `{ source => PumpState }`, what the caller knows of each heat
+  pump (below).
 - `aside`: system labels left to themselves, their mode not set.
 
 Only what differs from the device's state is an action, and a target
@@ -128,8 +128,28 @@ of its units on that heat pump may heat it: on a conflict, rooms needing
 heat that have radiators step aside; then the most rooms win; with no
 need either way, the direction stays. A room left needing the other way
 is warned of, and one left needing heat has its radiators heat it as
-they would a room with no unit, whatever its strategy gave them. How a tie and a room just past its band count is the
-settings' `pump`:
+they would a room with no unit, whatever its strategy gave them.
+
+Each system's mode is read on a unit that was read, its master's first,
+and set through its master to the heat pump's direction, whatever mode
+it is in (fan, dry, auto, stop included). With no direction to give,
+units in fan, dry or auto are left running rather than switched off,
+since those modes run without the heat pump (`Plan::RUNNING`). A system
+that must keep its own mode (one put in fan or dry by hand, say) is
+given in `aside:`: its mode is then never set. `Plan::ASIDE` names the
+modes a system runs in without the heat pump, for a caller deciding
+what to set aside. A heat pump is named by whatever its units' `source`
+holds, said as text.
+
+What the caller knows of each heat pump is a `PumpState` in `pumps:`:
+`held`, a direction set outside the planner and held (`:heat`, `:cool`,
+or nil for neither); `running`, whether its compressor runs now (nil:
+taken as whether one of its units is on); `switched_ago`, the minutes
+since it last started or stopped (nil: unknown).
+
+### Changing direction
+
+How a tie and a room just past its band count is the settings' `pump`:
 
 | `PumpSettings` | A room asks for the other direction | A tie |
 | :------------- | :---------------------------------- | :---- |
@@ -141,27 +161,19 @@ a room inside the margin is still warned of.
 
 ### Short cycles
 
-A heat pump whose least output exceeds a mild day's load starts and
-stops over and over. Three settings of `PumpSettings` act against it,
-each off until set:
+A heat pump's one compressor runs while any unit on it calls, and one
+whose least output exceeds a mild day's load starts and stops over and
+over. Its units are planned as one against it (`PumpCycle`), by these
+settings of `PumpSettings`, each off until set:
 
 | Setting | What it does |
 | :------ | :----------- |
-| `mild: 8.0, mild_deadband: 1.0` | with `room.outside` at or above `mild`, a unit heating is switched on only once the room is `mild_deadband` °C under its target, and off once the room reaches it, so each run is longer |
-| `min_on: 15, min_off: 10, urgent: 1.0` | a unit switched on (off) less than that many minutes ago (`switched_ago`) stays so, said in a warning; it is switched off at once when its energy is excluded now, when the pump runs the other direction, or when the room is `urgent` °C past its band the warm way, and on at once when the room is `urgent` °C past it the cold way |
-| `mild_lead: 8.0, lead_gap: 1.0` | with `room.outside` at or above `mild_lead`, a room less than `lead_gap` °C under its band heats with its radiators, its units a comfort gap behind, whatever the strategy (`cheapest` included); the energy rules' effects still apply after |
+| `mild: 8.0, mild_deadband: 1.0` | with `room.outside` at or above `mild` and the pump heating: stopped, it starts only once a room on it is `mild_deadband` °C under its unit's target, and then every unit whose room is under its target starts with it, one run for all; running, a unit whose room reaches its target goes off, and the last one stops the pump |
+| `min_on: 15, min_off: 10, urgent: 1.0` | a pump that started (stopped) less than that many minutes ago (its `switched_ago`) has none of its units switched off (on), said in a warning; a unit is switched off all the same when its energy is excluded now, when it runs another direction, or when its room is `urgent` °C past its band the warm way, and on when its room is `urgent` °C past it the cold way |
+| `mild_lead: 8.0, lead_gap: 1.0` | per room: with `room.outside` at or above `mild_lead`, a room less than `lead_gap` °C under its band heats with its radiators, its units a comfort gap behind, whatever the strategy (`cheapest` included); the energy rules' effects still apply after. Such a unit calls the pump only at its backup target |
 
-An unknown outside temperature, or an unknown `switched_ago`, leaves the
-plan as it would be without the setting. Each system's mode is read on a unit that
-was read, its master's first, and set through its master to the heat
-pump's direction, whatever mode it is in (fan, dry, auto, stop
-included). With no direction to give, units in fan, dry or auto are
-left running rather than switched off, since those modes run without
-the heat pump (`Plan::RUNNING`). A system that must keep its own mode
-(one put in fan or dry by hand, say) is given in `aside:`: its mode is
-then never set. `Plan::ASIDE` names the modes a system runs in without
-the heat pump, for a caller deciding what to set aside. A heat pump is
-named by whatever its units' `source` holds, said as text.
+An unknown outside temperature, room temperature or `switched_ago`
+leaves the plan as it would be without the setting.
 
 ## Held devices and drifts
 

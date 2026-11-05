@@ -24,9 +24,10 @@ module Thermidor
             # Its direction from the rooms with a unit of its own in the
             # plan: one switched off by hand cannot use it.
             def source(name, rooms)
-                held = @held.fetch(name, :none)
+                state = @pumps[name]
+                held = state ? state.held : Source::FREE
                 Source.new(name, rooms, current(rooms, name), @settings,
-                           held: held == :none ? Source::FREE : held)
+                           held:)
             end
 
             # The room's units, held or not; on source only when given.
@@ -53,9 +54,32 @@ module Thermidor
 
             def pump(source, rooms)
                 masters(rooms, source.name).each { mode(source, it) }
-                rooms.each { aircons(it, source) }
+                cycle = cycle(source, rooms)
+                targets = cycle.targets
+                rooms.each { aircons(it, source, targets) }
+                @warnings.concat(cycle.warnings)
                 unserved(source)
                 held_against(source)
+            end
+
+            # Its units planned as one (PumpCycle), from each one's target.
+            def cycle(source, rooms)
+                entries = rooms.flat_map do |room|
+                    targets = aircon_targets(room, source.direction)
+                    planned(room, source).select(&:mode).map do |unit|
+                        [room, unit, targets[unit.label]]
+                    end
+                end
+                PumpCycle.new(source, entries, @settings.pump,
+                              @pumps[source.name])
+            end
+
+            # The room's units on source that are planned: with no
+            # direction, one in fan, dry or auto is left running.
+            def planned(room, source)
+                direction = source.direction
+                room.aircons.select { it.source == source.name }
+                    .reject { direction.nil? && Plan::RUNNING.include?(it.mode) }
             end
 
             # The rooms needing what the pump does not give, said; one
@@ -95,13 +119,12 @@ module Thermidor
                              "pump #{source} has no direction now"
             end
 
-            # With no direction, a unit in fan, dry or auto is left running.
-            def aircons(room, source)
-                direction = source.direction
-                targets = aircon_targets(room, direction)
-                room.aircons.select { it.source == source.name }
-                    .reject { direction.nil? && Plan::RUNNING.include?(it.mode) }
-                    .each { aircon(room, it, targets[it.label], direction) }
+            # Each planned unit of the room on source to its target.
+            def aircons(room, source, targets)
+                planned(room, source).each do |unit|
+                    target = targets[[room.zone, unit.label]]
+                    aircon(room, unit, target, source.direction)
+                end
             end
 
             # { label => the setpoint each unit should hold in `direction`,

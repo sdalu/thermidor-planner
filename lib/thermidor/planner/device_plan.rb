@@ -10,22 +10,17 @@ module Thermidor
 
             # One that could not be read is left as it is, as a radiator
             # is (#radiator): what it holds now is not known, so nil must
-            # not be read as off. Against short cycles (CyclePlan), mild
-            # weather widens its gap and a least time keeps it on or off.
+            # not be read as off. One its heat pump keeps as it is
+            # (PumpCycle::KEEP) gets no action.
             def aircon(room, device, target, direction)
                 label = device.label
                 return unread(room, label) if device.mode.nil?
-                target = gapped(room, device, target, direction)
-                return aircon_off(room, device, direction) if target.nil?
-                return if !device.on && kept?(room, device, direction, :off)
+                return if target.equal?(PumpCycle::KEEP)
+                return change(room, label, :power, true, false) if
+                    target.nil? && device.on
+                return if target.nil?
                 change(room, label, :power, false, true) unless device.on
                 aircon_setpoint(room, device, target, direction)
-            end
-
-            def aircon_off(room, device, direction)
-                return unless device.on
-                return if kept?(room, device, direction, :on)
-                change(room, device.label, :power, true, false)
             end
 
             # direction: the mode the unit regulates in, its source's. A

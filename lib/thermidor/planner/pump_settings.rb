@@ -8,13 +8,16 @@ module Thermidor
         # keeps the direction it runs; a pump off goes either way with no
         # margin.
         #
-        # Against short cycles, each off while nil:
-        # - mild (°C): with the outside at or above it, a unit heating is
-        #   switched on only once the room is mild_deadband °C under its
-        #   target, and off once the room reaches it;
-        # - min_on, min_off (minutes): a unit switched on (off) less than
-        #   that ago stays so, unless its energy is excluded now or the
-        #   room is urgent °C past its band the other way;
+        # Against short cycles, judged per heat pump (PumpCycle), its one
+        # compressor running while any unit calls; each off while nil:
+        # - mild (°C): with the outside at or above it, a pump heating is
+        #   started only once a room on it is mild_deadband °C under its
+        #   unit's target, its units on together, and stopped once no
+        #   room is under it, its units off together;
+        # - min_on, min_off (minutes): a pump started (stopped) less than
+        #   that ago has none of its units switched off (on), unless a
+        #   unit's energy is excluded now, it runs another direction, or
+        #   its room is urgent °C past its band the other way;
         # - mild_lead (°C): with the outside at or above it, a room less
         #   than lead_gap °C under its band heats with its radiators, its
         #   units a comfort gap behind, whatever the strategy.

@@ -10,7 +10,6 @@ module Thermidor
         class Plan
             include DevicePlan
             include PumpPlan
-            include CyclePlan
             include HeldDevices
 
             # Modes a system runs in without its heat pump: what a caller
@@ -32,16 +31,16 @@ module Thermidor
                 mode if %i[heat cool].include?(mode)
             end
 
-            # held: { source => :heat, :cool or nil }, heat pumps'
-            # directions set outside the planner and held; aside: the
-            # systems (their labels) left to themselves, whose mode is not
-            # set.
+            # pumps: { source => PumpState }, what the caller knows of the
+            # heat pumps (a direction held, running, since when); aside:
+            # the systems (their labels) left to themselves, whose mode is
+            # not set.
             def initialize(rooms, settings: StrategySettings.new,
-                           translation: AsIs.new, held: {}, aside: [])
+                           translation: AsIs.new, pumps: {}, aside: [])
                 @rooms       = rooms
                 @settings    = settings
                 @translation = translation
-                @held        = held
+                @pumps       = pumps
                 @aside       = aside
             end
 

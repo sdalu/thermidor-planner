@@ -10,11 +10,12 @@ class SurveyFixesTest < Minitest::Test
 
     BAND = Thermidor::Schedule::Setpoint.new(heat: 20, cool: 26)
     AWAY = Thermidor::Schedule::Setpoint.new(heat: 16, cool: 30)
+    HELD_OFF = { "pump" => PumpState.new(held: nil) }.freeze
 
     # cheapest rests the radiator for the unit; the pump held off, the
     # radiator heats at the band instead of resting.
     def test_radiators_heat_a_room_its_pump_leaves_cold
-        result = Plan.new([away], held: { "pump" => nil }).run
+        result = Plan.new([away], pumps: HELD_OFF).run
         assert_includes changes(result), ["valve:1", :target, 5.0, 16.0]
     end
 
@@ -28,7 +29,7 @@ class SurveyFixesTest < Minitest::Test
     # for the pump: the radiator is not lifted.
     def test_an_idle_pump_does_not_wake_the_radiators
         idle = away.with(measured: 17.0)
-        result = Plan.new([idle], held: { "pump" => nil }).run
+        result = Plan.new([idle], pumps: HELD_OFF).run
         refute_includes changes(result), ["valve:1", :target, 5.0, 16.0]
     end
 

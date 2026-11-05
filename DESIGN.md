@@ -102,25 +102,30 @@ a slower answer for fewer reversals. A margin, not a minimum dwell:
 the planner keeps no clock of its own, and a dwell would need the
 caller to say when the direction last changed.
 
-## Short cycles are the house's to bound
+## Short cycles are the pump's, and the house's to bound
 
-A heat pump's least output can exceed what a room loses on a mild day,
-so the unit's own thermostat starts and stops it every few minutes.
-The planner can lengthen runs only through what it already controls,
-a unit's power and its room's band, so the three measures are made of
-those: a wider gap between on and off in mild weather, a least time on
-and off, and the radiators taking the small loads of mild weather so
-the units run only for the large ones. Each is a setting, off until
-set, since what counts as mild and how long a run must last are the
-house's, measured on its own pump. The planner keeps no clock and no
-weather: the caller says the outside temperature and how long ago each
-unit's power last changed, and an unknown value leaves the plan as it
-would be.
+A heat pump's one compressor runs while any unit on it calls, and its
+least output can exceed what the house loses on a mild day, so it
+starts and stops every few minutes. What wears is the compressor's
+starts, not a unit's: judged unit by unit, a gap or a least time does
+nothing for them, and rooms calling one after another can make them
+worse. So the measures are the pump's (`PumpCycle`): a stopped pump
+starts only once a room on it is a margin under its target, its units
+then on together for one run; a running one stops only once no room is
+under, its units off together; and it runs, or rests, a least time,
+none of its units switched off, or on, meanwhile. The radiators taking
+the small loads of mild weather stay a room's choice, which the pump
+sees as a unit calling only at its backup target.
 
-The least times give way where holding would do harm: an energy
-excluded now (a tariff's peak), the pump turned the other way, or the
-room already a margin past its band. A unit held is said, so a plan
-that changes nothing still shows why.
+Each is a setting, off until set, since what counts as mild and how
+long a run must last are the house's, measured on its own pump. The
+planner keeps no clock and no weather: the caller says the outside
+temperature, whether the compressor runs and since when (a power meter
+on its circuit knows better than the units' own state), and an unknown
+value leaves the plan as it would be. The least times give way where
+holding would do harm: an energy excluded now (a tariff's peak), a unit
+running another direction, or a room already a margin past its band.
+What is held is said, so a plan that changes nothing still shows why.
 
 ## Not heating is the least target
 
