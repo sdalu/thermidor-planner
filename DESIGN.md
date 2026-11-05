@@ -88,9 +88,10 @@ is voted by the rooms that can use it: a room needing heat that has
 radiators able to heat it steps aside on a conflict, since it has
 another way to be heated and the other side has none, and its radiators
 then heat it whatever its strategy gave them; then the most rooms win. With no
-need either way, the direction it has stays. A unit unread, or switched
-off by hand, does not vote: it cannot be known to want either way, nor
-can it use what it would vote for. The losers are told, never silently
+need either way, the direction it has stays. A unit unread, switched
+off by hand, or of a system set aside, does not vote: it cannot be known
+to want either way, or cannot use what it would vote for, a system set
+aside keeping its own mode and its units their own power and setpoint. The losers are told, never silently
 left out.
 
 A tie, and a room a tenth past its band, are where a pump can reverse

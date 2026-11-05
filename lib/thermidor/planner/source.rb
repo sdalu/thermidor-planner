@@ -14,7 +14,8 @@ module Thermidor
         # tie keeps it; every room needing the other way is said all the
         # same. A direction set outside the planner and held (held: :heat,
         # :cool or nil for neither) wins; the rooms it does not serve are
-        # said.
+        # said. A unit of a system set aside (aside:) gives its room no
+        # vote.
         class Source
             # Nothing held.
             FREE = Object.new.freeze
@@ -24,26 +25,32 @@ module Thermidor
             # conflict, for their radiators to heat.
             attr_reader :name, :direction, :unserved, :overridden, :stepped
 
-            # state: what the caller knows of it (PumpState): a direction
-            # held, whether its compressor runs.
-            def initialize(name, rooms, current,
+            # current: the direction its systems run now; state: what the
+            # caller knows of it (PumpState): a direction held, whether its
+            # compressor runs; aside: the systems left to themselves.
+            def initialize(name, rooms, current, # rubocop:disable Metrics/ParameterLists
                            settings = StrategySettings.new,
-                           state: PumpState.new)
+                           state: PumpState.new, aside: [])
                 @name     = name
+                @aside    = aside
                 @settings = settings
                 @pump     = settings.pump
                 @current  = current
                 @running  = running?(state, rooms)
-                voters = voters(rooms)
-                @direction  = directed(state.held, voters)
-                @unserved   = left_out(*votes(voters))
-                @stepped    = stepped_aside(voters)
-                @overridden = held_against(rooms)
+                vote(state.held, rooms)
             end
 
             def to_s = @name.to_s
 
             private
+
+            def vote(held, rooms)
+                voters = voters(rooms)
+                @direction  = directed(held, voters)
+                @unserved   = left_out(*votes(voters))
+                @stepped    = stepped_aside(voters)
+                @overridden = held_against(rooms)
+            end
 
             def directed(held, voters)
                 held.equal?(FREE) ? chosen(voters) : held
@@ -64,8 +71,13 @@ module Thermidor
                 rooms.select { |room| voting?(room) }
             end
 
-            def voting?(room)
-                room.aircons.any? { it.source == @name && it.mode }
+            def voting?(room) = own(room).any?(&:mode)
+
+            # room's units on this heat pump, but those set aside.
+            def own(room)
+                room.aircons.select do |unit|
+                    unit.source == @name && !@aside.include?(unit.system)
+                end
             end
 
             # [rooms needing heat, rooms needing cool] that a unit on this
@@ -102,16 +114,13 @@ module Thermidor
             # pump heat.
             def heats?(room)
                 targets = Strategy.heat(room, @settings)
-                room.aircons.select { it.source == @name }
-                    .any? { targets[it.label] }
+                own(room).any? { targets[it.label] }
             end
 
             # Whether room has a unit of its own on this heat pump, read,
             # that can cool it.
             def cools?(room)
-                room.aircons.any? do |unit|
-                    unit.source == @name && unit.mode && Roles.cools?(unit)
-                end
+                own(room).any? { it.mode && Roles.cools?(it) }
             end
 
             # The rooms needing what the direction does not give.

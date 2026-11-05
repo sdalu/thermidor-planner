@@ -25,7 +25,8 @@ module Thermidor
             # plan: one switched off by hand cannot use it.
             def source(name, rooms)
                 Source.new(name, rooms, current(rooms, name), @settings,
-                           state: @pumps[name] || PumpState.new)
+                           state: @pumps[name] || PumpState.new,
+                           aside: @aside)
             end
 
             # The room's units, held or not; on source only when given.
@@ -80,11 +81,13 @@ module Thermidor
             end
 
             # The room's units on source that are planned: with no
-            # direction, one in fan, dry or auto is left running.
+            # direction, one in fan, dry or auto is left running; one of a
+            # system set aside (read) is left to itself.
             def planned(room, source)
                 direction = source.direction
                 room.aircons.select { it.source == source.name }
                     .reject { direction.nil? && Plan::RUNNING.include?(it.mode) }
+                    .reject { it.mode && @aside.include?(it.system) }
             end
 
             # The zones the pump leaves to their radiators (#uncut): those

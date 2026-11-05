@@ -85,7 +85,8 @@ and takes no part. `caps` answers `heat`, `cool`, `quiet`,
   `notes`. `AsIs`, the default, sends the band's side as is.
 - `pumps`: `{ source => PumpState }`, what the caller knows of each heat
   pump (below).
-- `aside`: system labels left to themselves, their mode not set.
+- `aside`: system labels left to themselves: their mode is not set, their
+  units get no action, and their rooms do not vote through them.
 
 Only what differs from the device's state is an action, and a target
 within one step of what the device holds is left alone. A room that
@@ -139,7 +140,9 @@ it is in (fan, dry, auto, stop included). With no direction to give,
 units in fan, dry or auto are left running rather than switched off,
 since those modes run without the heat pump (`Plan::RUNNING`). A system
 that must keep its own mode (one put in fan or dry by hand, say) is
-given in `aside:`: its mode is then never set. `Plan::ASIDE` names the
+given in `aside:`: its mode is then never set, its units read are given
+no power nor setpoint (one unread is still said), and a room does not
+vote for the heat pump through them. `Plan::ASIDE` names the
 modes a system runs in without the heat pump, for a caller deciding
 what to set aside. A heat pump is named by whatever its units' `source`
 holds, said as text.
