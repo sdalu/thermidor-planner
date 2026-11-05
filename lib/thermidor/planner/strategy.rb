@@ -7,13 +7,35 @@ module Thermidor
         # heat pump changes direction (PumpSettings).
         # cost_margin: under cheapest, how much more (a fraction) the kWh
         # of heat of a device that led last (room.led) may cost than the
-        # cheapest's and keep the lead; nil, none.
-        StrategySettings = Data.define(:comfort, :pump, :cost_margin) do
+        # cheapest's and keep the lead; nil, none. aliases: { a house's
+        # own strategy name => the rule it follows (Strategy::RULES) }.
+        StrategySettings = Data.define(:comfort, :pump, :cost_margin,
+                                       :aliases) do
             def initialize(comfort: 0.5, pump: PumpSettings.new,
-                           cost_margin: nil)
+                           cost_margin: nil, aliases: {})
                 raise ArgumentError, "negative cost_margin #{cost_margin}" if
                     cost_margin&.negative?
+                aliases = aliases.to_h { |name, rule| [name.to_sym, rule] }
+                StrategySettings.check_aliases(aliases)
                 super
+            end
+
+            # The rule name follows: its own, or its alias's; nil when
+            # neither.
+            def rule(name)
+                return if name.nil?
+                name = name.to_sym
+                Strategy::RULES.include?(name) ? name : aliases[name]
+            end
+        end
+
+        class StrategySettings
+            def self.check_aliases(aliases)
+                wrong = aliases.reject { |_, rule| Strategy::RULES.include?(rule) }
+                return if wrong.empty?
+                raise ArgumentError, "an alias follows one of " \
+                                     "#{Strategy::RULES.join(", ")}: " \
+                                     "#{wrong.keys.join(", ")} does not"
             end
         end
 
@@ -22,6 +44,12 @@ module Thermidor
         # device does not heat); cooling is always the air conditioning's,
         # at the band's cool side.
         module Strategy
+            # The rules the planner knows; a house's own names follow one
+            # through StrategySettings#aliases, any other is planned as
+            # FALLBACK.
+            RULES    = %i[comfort quick quiet cheapest].freeze
+            FALLBACK = :comfort
+
             # What each strategy is for, whatever the devices.
             ABOUT = {
                 comfort: "the gentlest source by propagation leads; the " \
@@ -49,6 +77,18 @@ module Thermidor
                 name == :comfort ? { gap: given.comfort } : {}
             end
 
+            # What strategy `name` is for (ABOUT), through its alias; a
+            # name with neither raises ArgumentError.
+            def about(name, settings = StrategySettings.new)
+                ABOUT.fetch(known(name, settings))
+            end
+
+            # The rule of name, or ArgumentError.
+            def known(name, settings)
+                settings.rule(name) or
+                    raise ArgumentError, "unknown strategy #{name}"
+            end
+
             # A device as uses stands it for its class.
             Sample = Struct.new(:label, :caps, :range, :mode)
 
@@ -57,10 +97,12 @@ module Thermidor
             # device of each: [[class, offset from the band's heat side],
             # ...], the lead first; the others take no part. costs: what a
             # kWh of heat costs from each class ({ class => cost }), for
-            # cheapest.
+            # cheapest. A name with no rule (nor alias) raises
+            # ArgumentError.
             def uses(name, settings, caps, costs: {})
-                Roles.new(sample(name, caps, costs), 20.0)
-                     .offsets(name, settings).compact
+                rule = known(name, settings)
+                Roles.new(sample(rule, caps, costs), 20.0)
+                     .offsets(rule, settings).compact
                      .sort_by { -it.last }.map { [it.first.to_sym, it.last] }
             end
 

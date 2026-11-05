@@ -14,8 +14,26 @@ it is always the units', at the band's cool side, those whose
 | `quiet`    | the quiet devices only                                                                      |
 | `cheapest` | the devices whose heat costs least ([costs](#cheapest-and-costs))                           |
 
-Any other name is planned as `cheapest`. `Strategy::ABOUT` holds a
-sentence on each of the four, for a caller to show.
+These four are the planner's rules (`Strategy::RULES`). A house that
+names its own strategies in the schedule says which rule each follows:
+
+```ruby
+settings = P::StrategySettings.new(aliases: { eco: :cheapest })
+settings.rule(:eco)       # => :cheapest
+settings.rule(:quiet)     # => :quiet
+settings.rule(:thrifty)   # => nil
+```
+
+An alias to anything but the four raises `ArgumentError`. A room whose
+strategy is neither a rule nor an alias is planned as `comfort`
+(`Strategy::FALLBACK`, the schedule's default strategy), and said with
+an `:unknown_strategy` [warning](warnings.md) naming its room.
+
+`Strategy::ABOUT` holds a sentence on each of the four, for a caller to
+show; `Strategy.about(name, settings)` gives it through an alias, and
+raises `ArgumentError` for a name with neither, as `Strategy.uses`
+does: asking about a strategy is a configuration query, where failing
+loudly beats describing comfort under another name.
 
 ## Which devices take part
 

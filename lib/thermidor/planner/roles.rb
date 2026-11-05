@@ -75,9 +75,11 @@ module Thermidor
                 found.merge(following(found))
             end
 
+            # strategy: a rule, an alias of one (StrategySettings), or
+            # else planned as Strategy::FALLBACK.
             def strategy_offsets(strategy, settings)
                 return by { 0.0 } if @parts.map { it.last.caps }.uniq.size < 2
-                case strategy
+                case settings.rule(strategy) || Strategy::FALLBACK
                 when :quick then by { 0.0 }
                 when :quiet then by { it.caps.quiet ? 0.0 : nil }
                 when :comfort then comfort(settings.comfort)

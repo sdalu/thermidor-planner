@@ -17,33 +17,35 @@ are its own, not `Notice`s.
 
 ## The kinds
 
-| `kind`          | Said of                                                     | About                |
-| :-------------- | :---------------------------------------------------------- | :------------------- |
-| `:unread`       | a device not read, left as it is                            | zone, device         |
-| `:no_least`     | a radiator not to heat with no least target, left           | zone, device         |
-| `:unheated`     | a room needing heat that none of its devices heat, with why | zone                 |
-| `:unserved`     | a room needing what its heat pump does not give             | zone, source         |
-| `:held_against` | a unit held by hand the other way from its heat pump        | zone, device, source |
-| `:left_in_auto` | a system left in auto, its heat pump with no direction      | device, source       |
-| `:past_band`    | a device held by hand working past the band                 | zone, device         |
-| `:kept`         | a heat pump's units kept as they are for its least time     | source               |
+| `kind`              | Said of                                                      | About                |
+| :------------------ | :----------------------------------------------------------- | :------------------- |
+| `:unread`           | a device not read, left as it is                             | zone, device         |
+| `:no_least`         | a radiator not to heat with no least target, left            | zone, device         |
+| `:unheated`         | a room needing heat that none of its devices heat, with why  | zone                 |
+| `:unserved`         | a room needing what its heat pump does not give              | zone, source         |
+| `:held_against`     | a unit held by hand the other way from its heat pump         | zone, device, source |
+| `:left_in_auto`     | a system left in auto, its heat pump with no direction       | device, source       |
+| `:past_band`        | a device held by hand working past the band                  | zone, device         |
+| `:kept`             | a heat pump's units kept as they are for its least time      | source               |
+| `:unknown_strategy` | a room's strategy with no rule nor alias, planned as comfort | zone                 |
 
 ## The sentences
 
 In capitals what each one fills in; °C with one decimal.
 
-| `kind`          | Sentence                                                                |
-| :-------------- | :---------------------------------------------------------------------- |
-| `:unread`       | `ZONE: LABEL not read: left as it is`                                   |
-| `:no_least`     | `ZONE: LABEL has no least target: left as it is`                        |
-| `:unheated`     | `ZONE: needs heat, but WHY`                                             |
-| `:unserved`     | `ZONE: needs NEED, but SOURCE DIRECTION`                                |
-| `:held_against` | `ZONE: LABEL held DOING, the heat pump goes DOING`                      |
-| `:left_in_auto` | `SYSTEM: left in auto: the heat pump SOURCE has no direction now`       |
-| `:past_band`    | `ZONE: LABEL left on, heating to T °C, above the band's cool side T °C` |
-|                 | `ZONE: LABEL left on, cooling to T °C, below the band's heat side T °C` |
-| `:kept`         | `SOURCE: kept running: started N min ago, at least M`                   |
-|                 | `SOURCE: kept stopped: stopped N min ago, at least M`                   |
+| `kind`              | Sentence                                                                |
+| :------------------ | :---------------------------------------------------------------------- |
+| `:unread`           | `ZONE: LABEL not read: left as it is`                                   |
+| `:no_least`         | `ZONE: LABEL has no least target: left as it is`                        |
+| `:unheated`         | `ZONE: needs heat, but WHY`                                             |
+| `:unserved`         | `ZONE: needs NEED, but SOURCE DIRECTION`                                |
+| `:held_against`     | `ZONE: LABEL held DOING, the heat pump goes DOING`                      |
+| `:left_in_auto`     | `SYSTEM: left in auto: the heat pump SOURCE has no direction now`       |
+| `:past_band`        | `ZONE: LABEL left on, heating to T °C, above the band's cool side T °C` |
+|                     | `ZONE: LABEL left on, cooling to T °C, below the band's heat side T °C` |
+| `:kept`             | `SOURCE: kept running: started N min ago, at least M`                   |
+|                     | `SOURCE: kept stopped: stopped N min ago, at least M`                   |
+| `:unknown_strategy` | `ZONE: strategy NAME unknown, planned as comfort`                       |
 
 - WHY, the first that holds: `no device can heat it` (none read can);
   `ENERGY is excluded now` (the room's excluded energies, joined with
@@ -72,4 +74,5 @@ system:1: left in auto: the heat pump pump has no direction now
 a: valve:VA left on, heating to 26.5 °C, above the band's cool side 26.0 °C
 pump: kept running: started 5 min ago, at least 15
 pump: kept stopped: stopped 3 min ago, at least 10
+office: strategy eco unknown, planned as comfort
 ```

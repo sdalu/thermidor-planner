@@ -9,13 +9,13 @@ Plan.new(rooms, settings: StrategySettings.new, translation: AsIs.new,
          pumps: {}, aside: []).run   # a Result
 ```
 
-| Argument      | What it is                                                                               |
-| :------------ | :--------------------------------------------------------------------------------------- |
-| `rooms`       | `Room`, ...                                                                              |
-| `settings`    | a `StrategySettings`: `comfort` (0.5 °C), `pump` (a `PumpSettings`), `cost_margin` (nil) |
-| `translation` | answers `target` and `notes` ([below](#translation)); `AsIs` by default                  |
-| `pumps`       | `{ source => PumpState }`, what the caller knows of each heat pump                       |
-| `aside`       | the labels of systems left to themselves ([heat pumps](heat-pumps.md#systems-set-aside)) |
+| Argument      | What it is                                                                                                                                        |
+| :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `rooms`       | `Room`, ...                                                                                                                                       |
+| `settings`    | a `StrategySettings`: `comfort` (0.5 °C), `pump` (a `PumpSettings`), `cost_margin` (nil), `aliases` (`{}`, a house's own strategy names => rules) |
+| `translation` | answers `target` and `notes` ([below](#translation)); `AsIs` by default                                                                           |
+| `pumps`       | `{ source => PumpState }`, what the caller knows of each heat pump                                                                                |
+| `aside`       | the labels of systems left to themselves ([heat pumps](heat-pumps.md#systems-set-aside))                                                          |
 
 `StrategySettings` refuses a negative `cost_margin` with
 `ArgumentError`. `comfort` and `cost_margin` are the

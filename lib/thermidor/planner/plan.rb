@@ -49,6 +49,7 @@ module Thermidor
                 start
                 sources.each { |source, rooms| pump(source, rooms) }
                 @rooms.each do |room|
+                    unknown_strategy(room)
                     radiators(uncut(room))
                     unheated(room)
                     against_band(room)
@@ -113,6 +114,16 @@ module Thermidor
 
             # A warning (Notice): its sentence and what it is about.
             def notice(text, **about) = @warnings << Notice.new(text, **about)
+
+            # A room's strategy the planner has no rule for, nor alias:
+            # planned as Strategy::FALLBACK, said.
+            def unknown_strategy(room)
+                name = room.strategy
+                return if name.nil? || @settings.rule(name)
+                notice("#{room.zone}: strategy #{name} unknown, planned as " \
+                       "#{Strategy::FALLBACK}",
+                       kind: :unknown_strategy, zone: room.zone)
+            end
 
             def opposite(direction) = direction == :heat ? :cool : :heat
 
