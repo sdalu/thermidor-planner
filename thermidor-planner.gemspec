@@ -39,5 +39,5 @@ Gem::Specification.new do |s|
 
     s.require_paths = ["lib"]
 
-    s.add_dependency "thermidor-schedule", "~> 0.1"
+    s.add_dependency "thermidor-schedule", "~> 0.2"
 end

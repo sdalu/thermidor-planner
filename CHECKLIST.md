@@ -25,4 +25,4 @@
   pins a commit or a tag, which the owner makes: propose the number, do
   not tag.
 - [ ] Did `thermidor-schedule`'s pin in the Gemfile move? Keep it the
-  commit ClimatControl pins, and the gemspec's `~>` able to take it.
+  tag or commit ClimatControl pins, and the gemspec's `~>` able to take it.

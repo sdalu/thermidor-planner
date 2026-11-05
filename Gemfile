@@ -4,10 +4,10 @@ source "https://rubygems.org"
 
 gemspec
 
-# The bands and strategies planned from: the sibling gem, pinned at a
-# commit (no tag yet), the one ClimatControl pins.
+# The bands and strategies planned from: the sibling gem, at the release
+# tag ClimatControl pins (or the commit, between releases).
 gem "thermidor-schedule", github: "sdalu/thermidor-schedule",
-                          ref: "26345dd4ac3d8f73ae1ad3a92f48b9eee1ba7254"
+                          tag: "v0.2.0"
 
 group :development, :test do
     gem "minitest", "~> 5.25"

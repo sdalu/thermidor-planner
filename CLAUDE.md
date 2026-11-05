@@ -19,7 +19,7 @@ Ruby style: the `ruby` skill (4-space indentation, double quotes,
   pin.
 - Schedule work goes to thermidor-schedule
   (~/Repos/thermidor-schedule), never as a copy here; its pin in the
-  Gemfile is the commit ClimatControl pins.
+  Gemfile is the tag or commit ClimatControl pins.
 - A constant inside a nested class of a test is not found through the
   test's `include Thermidor::Planner`: name it in full
   (plan_held_test.rb's `Warmer`).
