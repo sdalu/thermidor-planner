@@ -28,6 +28,20 @@ class PlanAsideTest < Minitest::Test
         assert_empty result.warnings
     end
 
+    # Under cheapest, a room needing heat whose only unit is set aside
+    # is its radiator's, as one its pump leaves cold.
+    def test_a_room_whose_unit_is_set_aside_is_its_radiators
+        valve = Radiator.new(ref: "1", label: "valve:1",
+                             caps: RADIATOR_CAPS, temperature: nil,
+                             mode: :heat, target: 5.0, range: 5.0..25.0,
+                             step: 0.5, least: 5.0)
+        office = room("office", unit(1, "h:2", on: false), 18.0)
+                 .with(strategy: :cheapest, radiators: [valve])
+        actions = plan([office], aside: %w[h:2]).actions
+        targets = actions.map { [it.device, it.to] }
+        assert_includes targets, ["valve:1", 20.0]
+    end
+
     private
 
     def plan(rooms, aside: []) = Plan.new(rooms, aside:).run

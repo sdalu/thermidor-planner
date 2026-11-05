@@ -160,7 +160,9 @@ since those modes run without the heat pump (`Plan::RUNNING`). A system
 that must keep its own mode (one put in fan or dry by hand, say) is
 given in `aside:`: its mode is then never set, its units read are given
 no power nor setpoint (one unread is still said), and a room does not
-vote for the heat pump through them. `Plan::ASIDE` names the
+vote for the heat pump through them; a room needing heat whose units
+on that pump are all set aside is heated by its radiators, as one the
+pump leaves cold. `Plan::ASIDE` names the
 modes a system runs in without the heat pump, for a caller deciding
 what to set aside. A heat pump is named by whatever its units' `source`
 holds, said as text.

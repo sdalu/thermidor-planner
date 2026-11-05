@@ -14,8 +14,8 @@ module Thermidor
         # tie keeps it; every room needing the other way is said all the
         # same. A direction set outside the planner and held (held: :heat,
         # :cool or nil for neither) wins; the rooms it does not serve are
-        # said. A unit of a system set aside (aside:) gives its room no
-        # vote.
+        # said. A unit of a system set aside is not given it: Plan leaves
+        # it out of the rooms (PumpPlan#source).
         class Source
             # Nothing held.
             FREE = Object.new.freeze
@@ -27,12 +27,11 @@ module Thermidor
 
             # current: the direction its systems run now; state: what the
             # caller knows of it (PumpState): a direction held, whether its
-            # compressor runs; aside: the systems left to themselves.
-            def initialize(name, rooms, current, # rubocop:disable Metrics/ParameterLists
+            # compressor runs.
+            def initialize(name, rooms, current,
                            settings = StrategySettings.new,
-                           state: PumpState.new, aside: [])
+                           state: PumpState.new)
                 @name     = name
-                @aside    = aside
                 @settings = settings
                 @pump     = settings.pump
                 @current  = current
@@ -73,12 +72,8 @@ module Thermidor
 
             def voting?(room) = own(room).any?(&:mode)
 
-            # room's units on this heat pump, but those set aside.
-            def own(room)
-                room.aircons.select do |unit|
-                    unit.source == @name && !@aside.include?(unit.system)
-                end
-            end
+            # room's units on this heat pump.
+            def own(room) = room.aircons.select { it.source == @name }
 
             # [rooms needing heat, rooms needing cool] that a unit on this
             # pump may serve, the rooms stepping aside on a conflict left
