@@ -49,7 +49,8 @@ heats, and how far below the heat side, is the strategy's.
 Each strategy gives each device an offset from the band's heat side, or
 none (it does not heat): comfort leads with the gentlest, the others a
 gap behind; quick, all at once; quiet, the quiet ones; cheapest, the
-heat pumps. Offsets compose: an energy rule's effects (prefer, avoid,
+least costly by the costs given, else the heat pumps, else the
+radiators. Offsets compose: an energy rule's effects (prefer, avoid,
 cap, raise) move them after the strategy, so a rule never needs to know
 the strategy, nor a strategy the rules.
 

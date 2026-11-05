@@ -21,8 +21,9 @@ module Thermidor
                 quick: "every source able to heat, at once",
                 quiet: "only the quiet sources",
                 cheapest: "the cheapest source alone, by the costs " \
-                          "given, else a heat pump (heats and cools on " \
-                          "electricity)"
+                          "given (equal costs together), else the heat " \
+                          "pumps (heat and cool on electricity), else " \
+                          "the radiators"
             }.freeze
 
             # What each strategy setting means, and its unit.
