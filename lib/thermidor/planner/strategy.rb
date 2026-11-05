@@ -131,8 +131,21 @@ module Thermidor
             end
 
             def offsets(room, heat, settings)
+                roles(room, heat).offsets(room.strategy.to_sym, settings)
+            end
+
+            # What overrode the room's strategy, for an action's why: the
+            # mild lead when it changed the lead (Roles#lead_note); none
+            # without a band.
+            def notes(room, settings = StrategySettings.new)
+                heat = room.band&.heat or return []
+                name = room.strategy or return []
+                [roles(room, heat).lead_note(name.to_sym, settings)]
+                    .compact
+            end
+
+            def roles(room, heat)
                 Roles.new(room, heat, room.excluded, room.effects)
-                     .offsets(room.strategy.to_sym, settings)
             end
         end
     end

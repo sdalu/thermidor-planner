@@ -165,6 +165,18 @@ behind, and those the strategy rests stay resting; the effects still
 apply after. It holds only in a room where radiators and units both
 take part, and with its temperature known.
 
+A room whose radiators alone led it last (`room.led`) keeps them
+leading until the outside falls `lead_deadband` (0.5 °C) under
+`mild_lead`, so an outside hovering at `mild_lead` does not swap the
+lead, and rewrite every device, at each plan. Not knowing what led, or
+with a unit among those that led, the lead starts at `mild_lead`.
+
+Where the lead changed what the strategy asks, each action's `why`
+says it after the strategy: `"cheapest, mild lead (10.2 °C ≥ 10.0),
++18.0..+28.0, at 20.7"`, and `mild lead kept (9.7 °C ≥ 9.5)` within the
+deadband. A strategy leading with the radiators anyway (comfort, say)
+is not changed by it, and nothing is said.
+
 ```ruby
 lead = P::StrategySettings.new(pump: P::PumpSettings.new(mild_lead: 8.0))
 mild = room.with(outside: 10.0, measured: 19.6)
@@ -178,6 +190,17 @@ P::Strategy.heat(mild.with(measured: 18.9), lead)
 At 19.6 °C the valve leads and the unit, which `cheapest` alone would
 have made the lead, calls its heat pump only at its backup target, 19.5 °C. At
 18.9 °C the room is more than a degree under: `cheapest` decides again.
+
+```ruby
+cool = mild.with(outside: 7.7)
+P::Strategy.heat(cool, lead)
+# => { "valve:VA1" => nil, "unit:1" => 20.0 }
+P::Strategy.heat(cool.with(led: ["valve:VA1"]), lead)
+# => { "valve:VA1" => 20.0, "unit:1" => 19.5 }
+```
+
+At 7.7 °C, under `mild_lead`, the lead starts no more; the valve that
+led last keeps it down to 7.5 °C.
 
 ## Devices without caps
 

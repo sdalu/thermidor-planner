@@ -12,6 +12,8 @@ class ShortCyclingTest < Minitest::Test
 
     BAND = Thermidor::Schedule::Setpoint.new(heat: 20, cool: 26)
     MILD = 12.0
+    STOPPED = { "pump" => PumpState.new(running: false, switched_ago: 3) }
+              .freeze
 
     def test_nothing_changes_until_set
         assert_equal({ "unit:a" => [:power, false, true] },
@@ -38,8 +40,10 @@ class ShortCyclingTest < Minitest::Test
     def test_a_running_pump_stops_when_no_room_is_under
         settings = pump(mild: 8.0)
         rooms = [room("a", 19.5, on: true), room("b", 20.1, on: true)]
-        assert_equal({ "unit:b" => [:power, true, false] },
-                     power(plan(rooms, settings)))
+        result = plan(rooms, settings)
+        assert_equal({ "unit:b" => [:power, true, false] }, power(result))
+        assert_equal ["quick, mild gap, +20.0..+26.0, at 20.1"],
+                     result.actions.map(&:why)
         warm = [room("a", 20.0, on: true), room("b", 20.1, on: true)]
         assert_equal({ "unit:a" => [:power, true, false],
                        "unit:b" => [:power, true, false] },
@@ -65,19 +69,30 @@ class ShortCyclingTest < Minitest::Test
         assert_equal({ "unit:a" => [:power, true, false] },
                      power(plan([red], least, running)))
         hot = quiet.with(measured: 21.5)
-        assert_equal({ "unit:a" => [:power, true, false] },
-                     power(plan([hot], least, running)))
+        cooled = plan([hot], least, running)
+        assert_equal({ "unit:a" => [:power, true, false] }, power(cooled))
+        assert_equal "quiet, urgent, run ended, +20.0..+26.0, at 21.5",
+                     cooled.actions.first.why
     end
 
     def test_a_pump_stays_stopped_its_least_time_unless_a_room_is_cold
-        least = pump(min_off: 10)
-        stopped = state(running: false, ago: 3)
-        early = plan([room("a", 19.5)], least, stopped)
+        early = plan([room("a", 19.5)], pump(min_off: 10), STOPPED)
         assert_empty power(early)
         assert_includes early.warnings,
                         "pump: kept stopped: stopped 3 min ago, at least 10"
         assert_equal({ "unit:a" => [:power, false, true] },
-                     power(plan([room("a", 18.5)], least, stopped)))
+                     power(plan([room("a", 18.5)], pump(min_off: 10),
+                                STOPPED)))
+    end
+
+    # A room urgent ends the rest for every unit, each saying so.
+    def test_an_urgent_room_s_rest_ended_is_said
+        cold = plan([room("a", 18.5), room("b", 19.5)], pump(min_off: 10),
+                    STOPPED)
+        assert_equal({ "unit:a" => [:power, false, true],
+                       "unit:b" => [:power, false, true] }, power(cold))
+        assert_equal "quick, rest ended: a urgent, +20.0..+26.0, at 19.5",
+                     cold.actions.last.why
     end
 
     # Unknown since when, no least time.

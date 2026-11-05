@@ -63,6 +63,7 @@ module Thermidor
             def units_of(source, rooms)
                 cycle = cycle(source, rooms)
                 targets = cycle.targets
+                @actions.noted(cycle.notes)
                 rooms.each { aircons(it, source, targets) }
                 @warnings.concat(cycle.warnings)
                 cut(source, cycle.rested + source.stepped.map(&:zone))

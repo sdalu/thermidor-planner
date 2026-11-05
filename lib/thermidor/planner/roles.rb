@@ -65,14 +65,23 @@ module Thermidor
             # { device label => offset from the band's heat side, or nil }
             # for the devices taking part and those following their class:
             # the strategy's, the radiators leading in mild weather
-            # (PumpSettings#lead?), as the rules' effects change them.
+            # (MildLead), as the rules' effects change them.
             def offsets(strategy, settings)
                 energies = @parts.to_h { |_, one| [one.label, one.caps.energy] }
-                planned = strategy_offsets(strategy, settings)
-                planned = led(planned, settings.comfort) if
-                    lead?(settings.pump)
+                planned = lead_offsets(strategy, settings)
                 found = @effects.apply(planned, energies, settings.comfort)
                 found.merge(following(found))
+            end
+
+            # The strategy's offsets, the radiators leading in mild weather.
+            def lead_offsets(strategy, settings)
+                mild_lead(settings).apply(strategy_offsets(strategy, settings))
+            end
+
+            # The mild lead said, for why, when it changes what the strategy
+            # asks (MildLead#note); nil otherwise.
+            def lead_note(strategy, settings)
+                mild_lead(settings).note(strategy_offsets(strategy, settings))
             end
 
             # strategy: a rule, an alias of one (StrategySettings), or
@@ -89,24 +98,7 @@ module Thermidor
 
             private
 
-            # Mild, a room less than lead_gap under its band, radiators and
-            # units both taking part.
-            def lead?(pump)
-                return false unless pump.lead?(@room.outside)
-                roles = @parts.map(&:first).uniq
-                return false unless roles.size == 2
-                now = @room.temperature or return false
-                now > @room.band.heat - pump.lead_gap
-            end
-
-            # The radiators lead, the units the strategy has heat a gap
-            # behind; one it rests stays so.
-            def led(planned, gap)
-                @parts.to_h do |role, device|
-                    next [device.label, 0.0] if role == :radiator
-                    [device.label, planned[device.label] && -gap]
-                end
-            end
+            def mild_lead(settings) = MildLead.new(@room, @parts, settings)
 
             def by = @parts.to_h { |_, device| [device.label, yield(device)] }
 

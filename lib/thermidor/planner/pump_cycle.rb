@@ -21,6 +21,8 @@ module Thermidor
         # Given each unit's target, it gives each a target, nil for off,
         # or KEEP for as it is.
         class PumpCycle
+            include LeastTimes
+
             # A unit left as it is: power and setpoint unwritten.
             KEEP = Object.new.freeze
 
@@ -35,11 +37,14 @@ module Thermidor
                 @state     = state || PumpState.new
                 @outsides  = outsides
                 @warnings  = []
+                @notes     = {}
             end
 
             # warnings: what it said; rested: the zones needing heat whose
-            # units it holds while the pump rests, for their radiators.
-            attr_reader :warnings
+            # units it holds while the pump rests, for their radiators;
+            # notes: { [zone, unit label] => [what overrode its room's
+            # strategy, for why], ... }, after #targets.
+            attr_reader :warnings, :notes
 
             def rested = @rested || []
 
@@ -82,90 +87,19 @@ module Thermidor
                     under?(room, target, margin)
                 end
                 @entries.map do |room, unit, target|
-                    [room, unit, (target if calls && under?(room, target, 0.0))]
+                    next [room, unit, target] if
+                        calls && under?(room, target, 0.0)
+                    note(room, unit, "mild gap") if target
+                    [room, unit, nil]
                 end
+            end
+
+            def note(room, unit, said)
+                (@notes[[room.zone, unit.label]] ||= []) << said
             end
 
             def under?(room, target, margin)
                 !target.nil? && room.temperature < target - margin
-            end
-
-            # Its least time running or stopped, said when it holds a
-            # unit's power: running, its units on are left as they are;
-            # stopped, none is switched on or given a new setpoint, until
-            # a room urgent past its band starts it, which ends the rest.
-            def held(entries)
-                ago = @state.switched_ago or return entries
-                least = running? ? @settings.min_on : @settings.min_off
-                return entries unless least && ago < least
-                if running?
-                    run(entries, ago, least)
-                else
-                    rest(entries, ago, least)
-                end
-            end
-
-            def run(entries, ago, least)
-                said = entries.any? do |room, unit, target|
-                    target.nil? && kept_on?(room, unit)
-                end
-                say(ago, least) if said
-                entries.map { |entry| kept_on?(*entry) ? kept(entry) : entry }
-            end
-
-            def rest(entries, ago, least)
-                return entries if entries.any? { starts?(*it) }
-                held = entries.select(&:last)
-                @rested = zones_needing_heat(held)
-                say(ago, least) if held.any? { |_, unit, _| !unit.on }
-                entries.map { |entry| entry.last ? kept(entry) : entry }
-            end
-
-            # A unit on, kept so while the pump runs its least.
-            def kept_on?(room, unit, _target = nil)
-                unit.on == true && !freed?(room, unit)
-            end
-
-            # A unit off whose room is urgent past its band the cold way:
-            # it starts the pump whatever its rest.
-            def starts?(room, unit, target)
-                !target.nil? && !unit.on && urgent?(room, :cold)
-            end
-
-            def zones_needing_heat(entries)
-                entries.map(&:first).select { it.need == :heat }
-                       .map(&:zone).uniq
-            end
-
-            def kept(entry) = [*entry.first(2), KEEP]
-
-            # What ends the least time running for a unit: its energy
-            # excluded now, a cooling it cannot give, a direction it does
-            # not run, or its room urgent past its band the warm way.
-            def freed?(room, unit)
-                (direction == :heat && !Roles.heats?(unit, room.excluded)) ||
-                    (direction == :cool && !Roles.cools?(unit)) ||
-                    Plan.direction_of(unit.mode) != direction ||
-                    urgent?(room, :warm)
-            end
-
-            # Whether the room is urgent °C past its band the cold or the
-            # warm way, for the direction run.
-            def urgent?(room, way)
-                now = room.temperature or return false
-                side = direction == :cool ? room.band&.cool : room.band&.heat
-                return false unless side
-                margin = @settings.urgent
-                warm = (way == :warm) == (direction != :cool)
-                warm ? now > side + margin : now < side - margin
-            end
-
-            def say(ago, least)
-                did = running? ? "running: started" : "stopped: stopped"
-                @warnings << Notice.new("#{@source}: kept #{did} " \
-                                        "#{ago.round} min ago, at least " \
-                                        "#{least}",
-                                        kind: :kept, source: @source.name)
             end
         end
     end

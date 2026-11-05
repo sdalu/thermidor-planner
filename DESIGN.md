@@ -163,6 +163,16 @@ holding would do harm: an energy excluded now (a tariff's peak), a unit
 running another direction, or a room already a margin past its band.
 What is held is said, so a plan that changes nothing still shows why.
 
+The mild lead swaps every device in a room, radiators and units, so an
+outside hovering at `mild_lead` would rewrite them all at each plan. A
+room whose radiators alone led last keeps them leading until the
+outside is `lead_deadband` under it. What led last is `room.led`, the
+input the cost margin reads already: radiators alone at the band and
+the units a gap behind is what the lead leaves, and a strategy leading
+with the radiators anyway is planned the same either way. A plan
+written by the lead, or by the pump's measures, says so in its `why`,
+since the strategy's name alone would claim it.
+
 ## Not heating is the least target
 
 A radiator not to heat goes to its least target rather than off: a

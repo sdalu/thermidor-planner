@@ -20,9 +20,10 @@ until set:
 | `urgent`        | 1.0     | °C past its band that ends a least time                                      |
 | `mild_lead`     | nil     | °C outside from which radiators lead ([strategies](strategies.md#mild-lead)) |
 | `lead_gap`      | 1.0     | how far under its band a room still lets its radiators lead                  |
+| `lead_deadband` | 0.5     | how far under `mild_lead` radiators leading already keep the lead            |
 
 `PumpSettings` refuses a negative value, and a nil `mild_deadband`,
-`urgent` or `lead_gap`, with `ArgumentError`. An unknown outside
+`urgent`, `lead_gap` or `lead_deadband`, with `ArgumentError`. An unknown outside
 temperature, room temperature or `switched_ago` leaves the plan as it
 would be without the setting.
 
@@ -125,3 +126,12 @@ resting.warnings  # => ["pump: kept stopped: stopped 3 min ago, at least 10"]
 
 Stopped 3 minutes ago, the heat pump rests its 10: the room heats with
 its radiator meanwhile, as if it had no unit.
+
+## Said in why
+
+An action the heat pump's measures changed says which in its `why`,
+after the strategy: `mild gap` for a unit off that the strategy would
+have heat, `urgent, run ended` for a unit switched off within its
+least run, its room too warm, and `rest ended: a urgent` for every unit
+heating once zone `a` ended the rest. A unit held (`KEEP`) gets no
+action: the `:kept` warning says it.

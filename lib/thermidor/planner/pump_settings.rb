@@ -20,10 +20,13 @@ module Thermidor
         #   its room is urgent °C past its band the other way;
         # - mild_lead (°C): with the outside at or above it, a room less
         #   than lead_gap °C under its band heats with its radiators, its
-        #   units a comfort gap behind, whatever the strategy.
+        #   units a comfort gap behind, whatever the strategy; a room
+        #   whose radiators led last (Room#led) keeps them leading until
+        #   the outside falls lead_deadband °C below it.
         PUMP_DEFAULTS = { switch: :heat, margin: 0.5, mild: nil,
                           mild_deadband: 1.0, min_on: nil, min_off: nil,
-                          urgent: 1.0, mild_lead: nil, lead_gap: 1.0 }.freeze
+                          urgent: 1.0, mild_lead: nil, lead_gap: 1.0,
+                          lead_deadband: 0.5 }.freeze
 
         PumpSettings = Data.define(*PUMP_DEFAULTS.keys) do
             def initialize(**given)
@@ -41,9 +44,18 @@ module Thermidor
             # Whether outside (°C, nil unknown) is mild for the gap.
             def mild?(outside) = !mild.nil? && !outside.nil? && outside >= mild
 
-            # Whether outside is mild for the radiators to lead.
-            def lead?(outside)
-                !mild_lead.nil? && !outside.nil? && outside >= mild_lead
+            # Whether outside is mild for the radiators to lead: from
+            # mild_lead, and lead_deadband below it for radiators leading
+            # already (leading).
+            def lead?(outside, leading: false)
+                bound = lead_bound(leading:) or return false
+                !outside.nil? && outside >= bound
+            end
+
+            # The outside °C from which the radiators lead, nil when off.
+            def lead_bound(leading: false)
+                return if mild_lead.nil?
+                leading ? mild_lead - lead_deadband : mild_lead
             end
         end
 
@@ -51,7 +63,8 @@ module Thermidor
             SWITCHES = %i[heat hysteresis].freeze
 
             # Settings with no off: nil is refused.
-            REQUIRED = %i[margin mild_deadband urgent lead_gap].freeze
+            REQUIRED = %i[margin mild_deadband urgent lead_gap
+                          lead_deadband].freeze
 
             def self.given(values)
                 missing = REQUIRED.select { values[it].nil? }

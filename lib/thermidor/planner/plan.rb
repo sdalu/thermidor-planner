@@ -73,7 +73,7 @@ module Thermidor
 
             # cut: { zone => the heat pumps leaving it needing heat }.
             def start
-                @actions  = Actions.new
+                @actions  = Actions.new(@settings)
                 @warnings = []
                 @cut      = Hash.new { |hash, zone| hash[zone] = [] }
             end

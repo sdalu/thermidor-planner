@@ -81,7 +81,7 @@ best of its class ([strategies](strategies.md#devices-without-caps)).
 | `effects`  | what its energy rules do besides (`Effects.none`; [effects](strategies.md#effects)) |
 | `costs`    | what a kWh of heat costs from each device now, by label, any one unit (`{}`)        |
 | `outside`  | the outside °C now (nil: unknown)                                                   |
-| `led`      | the labels of the devices that led it last (nil: unknown)                           |
+| `led`      | the labels of the devices that led it last, at the band (nil: unknown)              |
 | `held`     | its devices switched outside the planner (`[]`; [held devices](held.md))            |
 
 `Room#temperature` is `measured`, else its devices' readings averaged
@@ -105,7 +105,9 @@ temperature.
 
 `why` reads `"comfort, +20.0..+26.0, at 18.5 (devices)"`, `(devices)`
 when the temperature is the devices' average, `, +1.2 offset` after it
-when the translation gave one; a system's mode reads `"source "` and
+when the translation gave one. What overrode the strategy for that
+device comes after the strategy: the [mild lead](strategies.md#mild-lead),
+and a heat pump's [mild gap or urgent room](short-cycles.md#said-in-why); a system's mode reads `"source "` and
 its heat pump's name.
 
 `warnings` are `Notice`s ([warnings](warnings.md)), the translation's
