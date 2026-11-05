@@ -12,8 +12,11 @@
 
 ## Documents
 
-- [ ] `README.md`: do the types' table, the arguments of `Plan`, the
-  strategies and the shortfalls still match the code?
+- [ ] `README.md`: do the overview, what it takes and gives, the
+  shortfalls and the table of `doc/` pages still match the code?
+- [ ] `doc/`: does each page still say what its part does? Its examples
+  are run by test/doc_examples_test.rb; the warnings' sentences in
+  doc/warnings.md are not: do they match lib/?
 - [ ] `DESIGN.md`: did this round change a reason it gives, or make a
   choice it should record?
 

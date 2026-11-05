@@ -5,7 +5,8 @@ module Thermidor
         # What a room's energy rules, holding now, do to its device
         # classes besides excluding them, by energy:
         # preferred lead; avoided back up, never lead; caps ({ energy =>
-        # °C }) heat at most that far under the band's heat side; raises
+        # °C }) heat no higher than that far under the band's heat side
+        # (a target at least that far under it); raises
         # ({ energy => °C }) heat that far over it, storing heat while it
         # is cheap.
         Effects = Data.define(:preferred, :avoided, :caps, :raises) do
