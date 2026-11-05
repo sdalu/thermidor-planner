@@ -124,9 +124,15 @@ of its units on that heat pump may heat it: on a conflict, rooms needing
 heat that have radiators step aside; then the most rooms win, heat on a
 tie; with no need either way, the direction stays. A room left needing
 the other way is warned of. Each system's mode is read on a unit that
-was read, its master's first, and set through its master; a system in
-fan or dry runs without the heat pump and is left running. A heat pump
-is named by whatever its units' `source` holds, said as text.
+was read, its master's first, and set through its master to the heat
+pump's direction, whatever mode it is in (fan, dry, auto, stop
+included). With no direction to give, units in fan, dry or auto are
+left running rather than switched off, since those modes run without
+the heat pump (`Plan::RUNNING`). A system that must keep its own mode
+(one put in fan or dry by hand, say) is given in `aside:`: its mode is
+then never set. `Plan::ASIDE` names the modes a system runs in without
+the heat pump, for a caller deciding what to set aside. A heat pump is
+named by whatever its units' `source` holds, said as text.
 
 ## Held devices and drifts
 

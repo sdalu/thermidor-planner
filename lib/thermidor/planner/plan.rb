@@ -11,7 +11,10 @@ module Thermidor
             include DevicePlan
             include HeldDevices
 
-            # Modes a system runs in without its heat pump.
+            # Modes a system runs in without its heat pump: what a caller
+            # may set aside (aside:) when a system was put in one by hand.
+            # The plan itself sets a system to its pump's direction
+            # whatever its mode.
             ASIDE = %i[fan dry].freeze
 
             # Modes a unit keeps when the heat pump has no direction.
