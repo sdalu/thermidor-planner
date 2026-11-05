@@ -2,25 +2,57 @@
 
 module Thermidor
     module Planner
-        # How a heat pump changes direction. switch: :heat, the most rooms
-        # win and heat wins a tie; :hysteresis, a room asks for the
-        # direction the pump does not run only once margin °C past its
-        # band, and a tie keeps the direction it runs. A pump off is free
-        # to go either way, with no margin.
-        PumpSettings = Data.define(:switch, :margin) do
-            def initialize(switch: :heat, margin: 0.5)
+        # How a heat pump is run. switch: :heat, the most rooms win and
+        # heat wins a tie; :hysteresis, a room asks for the direction the
+        # pump does not run only once margin °C past its band, and a tie
+        # keeps the direction it runs; a pump off goes either way with no
+        # margin.
+        #
+        # Against short cycles, each off while nil:
+        # - mild (°C): with the outside at or above it, a unit heating is
+        #   switched on only once the room is mild_deadband °C under its
+        #   target, and off once the room reaches it;
+        # - min_on, min_off (minutes): a unit switched on (off) less than
+        #   that ago stays so, unless its energy is excluded now or the
+        #   room is urgent °C past its band the other way;
+        # - mild_lead (°C): with the outside at or above it, a room less
+        #   than lead_gap °C under its band heats with its radiators, its
+        #   units a comfort gap behind, whatever the strategy.
+        PUMP_DEFAULTS = { switch: :heat, margin: 0.5, mild: nil,
+                          mild_deadband: 1.0, min_on: nil, min_off: nil,
+                          urgent: 1.0, mild_lead: nil, lead_gap: 1.0 }.freeze
+
+        PumpSettings = Data.define(*PUMP_DEFAULTS.keys) do
+            def initialize(**given)
+                values = PUMP_DEFAULTS.merge(given)
+                switch = values[:switch]
                 raise ArgumentError, "unknown switch #{switch.inspect}" unless
                     PumpSettings::SWITCHES.include?(switch)
-                raise ArgumentError, "negative margin #{margin}" if
-                    margin.negative?
-                super
+                PumpSettings.positive(**values.except(:switch))
+                super(**values)
             end
 
             def hysteresis? = switch == :hysteresis
+
+            # Whether outside (°C, nil unknown) is mild for the gap.
+            def mild?(outside) = !mild.nil? && !outside.nil? && outside >= mild
+
+            # Whether outside is mild for the radiators to lead.
+            def lead?(outside)
+                !mild_lead.nil? && !outside.nil? && outside >= mild_lead
+            end
         end
 
         class PumpSettings
             SWITCHES = %i[heat hysteresis].freeze
+
+            # Refuses a negative value among those given (nil: unset).
+            def self.positive(**values)
+                values.each do |name, value|
+                    raise ArgumentError, "negative #{name} #{value}" if
+                        value&.negative?
+                end
+            end
         end
     end
 end

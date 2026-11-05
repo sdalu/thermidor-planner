@@ -62,8 +62,8 @@ it, and the unit's setpoint is written for the mode it will run in.
 | Type | What it is |
 | :--- | :--------- |
 | `Radiator` | a thermostat on a radiator: heats only; mode `:off` or `:heat`, a target on its step and range, `least` the target standing for "not heating" when the range gives none |
-| `Aircon` | an air-conditioning unit: on or off, a mode (`:heat`, `:cool`, `:aux`, `:fan`, `:dry`, `:auto`, `:stop`), a setpoint; `system` the label of the units sharing its mode (set through the `master`), `source` the heat pump its system runs on; `ranges` its setpoints by mode |
-| `Room` | a zone's band (nil: nothing to hold, its devices left off) and strategy, its radiators and units; `measured` its temperature from a reference of its own (else its devices' average), `location` where that reference is, `excluded` the energies that may not heat now, `effects` what its energy rules do besides, `costs` what a kWh of heat costs from each device now (by label, any one unit), `held` its devices switched outside the planner |
+| `Aircon` | an air-conditioning unit: on or off, a mode (`:heat`, `:cool`, `:aux`, `:fan`, `:dry`, `:auto`, `:stop`), a setpoint; `system` the label of the units sharing its mode (set through the `master`), `source` the heat pump its system runs on; `ranges` its setpoints by mode; `switched_ago` the minutes since its power last changed (nil: unknown) |
+| `Room` | a zone's band (nil: nothing to hold, its devices left off) and strategy, its radiators and units; `measured` its temperature from a reference of its own (else its devices' average), `location` where that reference is, `excluded` the energies that may not heat now, `effects` what its energy rules do besides, `costs` what a kWh of heat costs from each device now (by label, any one unit), `outside` the outside °C now (nil: unknown), `held` its devices switched outside the planner |
 
 A device read with a nil `mode` is unread: it gets no action, no vote,
 and takes no part. `caps` answers `heat`, `cool`, `quiet`,
@@ -133,7 +133,22 @@ settings' `pump`:
 | `switch: :hysteresis, margin: 0.5` | only once `margin` °C past its band | the direction it runs stays |
 
 With hysteresis, a pump that is off goes either way with no margin, and
-a room inside the margin is still warned of. Each system's mode is read on a unit that
+a room inside the margin is still warned of.
+
+### Short cycles
+
+A heat pump whose least output exceeds a mild day's load starts and
+stops over and over. Three settings of `PumpSettings` act against it,
+each off until set:
+
+| Setting | What it does |
+| :------ | :----------- |
+| `mild: 8.0, mild_deadband: 1.0` | with `room.outside` at or above `mild`, a unit heating is switched on only once the room is `mild_deadband` °C under its target, and off once the room reaches it, so each run is longer |
+| `min_on: 15, min_off: 10, urgent: 1.0` | a unit switched on (off) less than that many minutes ago (`switched_ago`) stays so, said in a warning; it is switched off at once when its energy is excluded now, when the pump runs the other direction, or when the room is `urgent` °C past its band the warm way, and on at once when the room is `urgent` °C past it the cold way |
+| `mild_lead: 8.0, lead_gap: 1.0` | with `room.outside` at or above `mild_lead`, a room less than `lead_gap` °C under its band heats with its radiators, its units a comfort gap behind, whatever the strategy (`cheapest` included); the energy rules' effects still apply after |
+
+An unknown outside temperature, or an unknown `switched_ago`, leaves the
+plan as it would be without the setting. Each system's mode is read on a unit that
 was read, its master's first, and set through its master to the heat
 pump's direction, whatever mode it is in (fan, dry, auto, stop
 included). With no direction to give, units in fan, dry or auto are

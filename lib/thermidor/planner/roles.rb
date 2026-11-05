@@ -34,6 +34,7 @@ module Thermidor
                 @excluded = excluded
                 @effects  = effects
                 @costs    = room.costs
+                @room     = room
                 classes = { radiator: room.radiators, aircon: room.aircons }
                 read = classes.flat_map do |role, devices|
                     devices.reject { unread?(it) }.map { [role, it] }
@@ -44,11 +45,13 @@ module Thermidor
 
             # { device label => offset from the band's heat side, or nil }
             # for the devices taking part and those following their class:
-            # the strategy's, as the rules' effects change them.
+            # the strategy's, the radiators leading in mild weather
+            # (PumpSettings#lead?), as the rules' effects change them.
             def offsets(strategy, settings)
                 energies = @parts.to_h { |_, one| [one.label, one.caps.energy] }
-                found = @effects.apply(strategy_offsets(strategy, settings),
-                                       energies, settings.comfort)
+                planned = strategy_offsets(strategy, settings)
+                planned = led(settings.comfort) if lead?(settings.pump)
+                found = @effects.apply(planned, energies, settings.comfort)
                 found.merge(following(found))
             end
 
@@ -63,6 +66,23 @@ module Thermidor
             end
 
             private
+
+            # Mild, a room less than lead_gap under its band, radiators and
+            # units both taking part.
+            def lead?(pump)
+                return false unless pump.lead?(@room.outside)
+                roles = @parts.map(&:first).uniq
+                return false unless roles.size == 2
+                now = @room.temperature or return false
+                now > @room.band.heat - pump.lead_gap
+            end
+
+            # The radiators lead, the units a gap behind.
+            def led(gap)
+                @parts.to_h do |role, device|
+                    [device.label, role == :radiator ? 0.0 : -gap]
+                end
+            end
 
             def by = @parts.to_h { |_, device| [device.label, yield(device)] }
 

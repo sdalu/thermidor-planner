@@ -102,6 +102,26 @@ a slower answer for fewer reversals. A margin, not a minimum dwell:
 the planner keeps no clock of its own, and a dwell would need the
 caller to say when the direction last changed.
 
+## Short cycles are the house's to bound
+
+A heat pump's least output can exceed what a room loses on a mild day,
+so the unit's own thermostat starts and stops it every few minutes.
+The planner can lengthen runs only through what it already controls,
+a unit's power and its room's band, so the three measures are made of
+those: a wider gap between on and off in mild weather, a least time on
+and off, and the radiators taking the small loads of mild weather so
+the units run only for the large ones. Each is a setting, off until
+set, since what counts as mild and how long a run must last are the
+house's, measured on its own pump. The planner keeps no clock and no
+weather: the caller says the outside temperature and how long ago each
+unit's power last changed, and an unknown value leaves the plan as it
+would be.
+
+The least times give way where holding would do harm: an energy
+excluded now (a tariff's peak), the pump turned the other way, or the
+room already a margin past its band. A unit held is said, so a plan
+that changes nothing still shows why.
+
 ## Not heating is the least target
 
 A radiator not to heat goes to its least target rather than off: a

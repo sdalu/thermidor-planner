@@ -36,11 +36,12 @@ module Thermidor
         # units sharing its mode, which is set through its master unit;
         # source: the heat pump its system runs on, whose direction every
         # unit on it shares. range: its setpoints now, in the mode it is
-        # in; ranges: by mode (:heat, :cool), those it gives.
+        # in; ranges: by mode (:heat, :cool), those it gives;
+        # switched_ago: minutes since its power last changed, nil unknown.
         Aircon = Data.define(:ref, :label, :caps, :system, :source, :master,
                              :temperature, :on, :mode, :setpoint, :range,
-                             :ranges, :step) do
-            def initialize(ranges: {}, **) = super
+                             :ranges, :step, :switched_ago) do
+            def initialize(ranges: {}, switched_ago: nil, **) = super
 
             # The setpoints it takes in direction.
             def range_in(direction) = ranges.to_h.fetch(direction, range)
@@ -55,14 +56,15 @@ module Thermidor
         # effects: what its energy rules do besides excluding (Effects);
         # costs: what a kWh of heat costs from each device now, by label,
         # in any one unit, for cheapest (none: a heat pump is taken as
-        # the cheapest).
+        # the cheapest); outside: the outside °C now, nil unknown, for the
+        # pump's mild-weather settings (PumpSettings).
         ROOM_DEFAULTS = { excluded: [], measured: nil, location: nil,
                           held: [], effects: Effects.none,
-                          costs: {} }.freeze
+                          costs: {}, outside: nil }.freeze
 
         Room = Data.define(:zone, :band, :strategy, :radiators, :aircons,
                            :excluded, :measured, :location, :held,
-                           :effects, :costs) do
+                           :effects, :costs, :outside) do
             def initialize(**) = super(**ROOM_DEFAULTS, **)
 
             # Every device, held or not.
@@ -120,6 +122,7 @@ require_relative "planner/source"
 require_relative "planner/actions"
 require_relative "planner/fit"
 require_relative "planner/device_plan"
+require_relative "planner/cycle_plan"
 require_relative "planner/held_devices"
 require_relative "planner/plan"
 require_relative "planner/drifts"

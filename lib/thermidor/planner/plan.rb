@@ -9,6 +9,7 @@ module Thermidor
         # holds it.
         class Plan
             include DevicePlan
+            include CyclePlan
             include HeldDevices
 
             # Modes a system runs in without its heat pump: what a caller
