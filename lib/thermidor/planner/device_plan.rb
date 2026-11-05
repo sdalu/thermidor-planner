@@ -69,7 +69,7 @@ module Thermidor
             # Its range's least, else its own; with neither, said.
             def radiator_least(room, device, label)
                 return if device.mode == :off
-                least = device.range&.min || device.least or
+                least = device.range&.begin || device.least or
                     return no_least(room, label)
                 return if device.target && (device.target - least).abs < 0.05
                 change(room, label, :target, device.target, least)

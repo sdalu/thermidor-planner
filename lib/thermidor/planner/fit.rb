@@ -8,7 +8,7 @@ module Thermidor
         module Fit
             module_function
 
-            # On step, within range (nil: any).
+            # On step, within range (nil, or an open end: no bound).
             def fit(celsius, step, range)
                 fitted = ((celsius / step).round * step).round(1)
                 range ? fitted.clamp(range) : fitted

@@ -148,6 +148,13 @@ unit whose least setpoint is above an away band is switched off rather
 than set to that least, above the band. A room votes for a heat pump
 only by a unit on it that may heat the room.
 
+A heat pump that leaves a room needing heat (held off, voted the other
+way, stopped) leaves its radiators to it: they are planned as if the
+room had no unit, so a strategy that rested them for the unit cannot
+leave the room cold. Only then: a pump merely idle, with no room
+needing heat, does not wake them, or cheapest would hand every quiet
+hour to the radiators.
+
 ## On the device's step, moved by a step or not at all
 
 A target is written on the device's step and within its range, so it

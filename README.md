@@ -61,7 +61,7 @@ it, and the unit's setpoint is written for the mode it will run in.
 
 | Type | What it is |
 | :--- | :--------- |
-| `Radiator` | a thermostat on a radiator: heats only; mode `:off` or `:heat`, a target on its step and range, `least` the target standing for "not heating" when the range gives none |
+| `Radiator` | a thermostat on a radiator: heats only; mode `:off` or `:heat`, a target on its step and range, `least` the target standing for "not heating" when the range gives none; a range open at an end (`nil..25.0`) is no bound on that side |
 | `Aircon` | an air-conditioning unit: on or off, a mode (`:heat`, `:cool`, `:aux`, `:fan`, `:dry`, `:auto`, `:stop`), a setpoint; `system` the label of the units sharing its mode (set through the `master`), `source` the heat pump its system runs on; `ranges` its setpoints by mode; `switched_ago` the minutes since its power last changed (nil: unknown) |
 | `Room` | a zone's band (nil: nothing to hold, its devices left off) and strategy, its radiators and units; `measured` its temperature from a reference of its own (else its devices' average), `location` where that reference is, `excluded` the energies that may not heat now, `effects` what its energy rules do besides, `costs` what a kWh of heat costs from each device now (by label, any one unit), `outside` the outside °C now (nil: unknown), `held` its devices switched outside the planner |
 
@@ -88,7 +88,10 @@ and takes no part. `caps` answers `heat`, `cool`, `quiet`,
 - `aside`: system labels left to themselves, their mode not set.
 
 Only what differs from the device's state is an action, and a target
-within one step of what the device holds is left alone.
+within one step of what the device holds is left alone. A room that
+needs heat and gets none from its devices is warned of with why: an
+energy excluded now, no device heating as low as its band, or no
+device able to heat.
 
 ## Strategies
 
@@ -124,7 +127,8 @@ with a unit on it that is read and planned, needing heat only when one
 of its units on that heat pump may heat it: on a conflict, rooms needing
 heat that have radiators step aside; then the most rooms win; with no
 need either way, the direction stays. A room left needing the other way
-is warned of. How a tie and a room just past its band count is the
+is warned of, and one left needing heat has its radiators heat it as
+they would a room with no unit, whatever its strategy gave them. How a tie and a room just past its band count is the
 settings' `pump`:
 
 | `PumpSettings` | A room asks for the other direction | A tie |

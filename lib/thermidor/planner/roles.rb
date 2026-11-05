@@ -94,8 +94,8 @@ module Thermidor
 
             # Whether a device cannot heat as low as heat.
             def too_warm?(device, heat)
-                range = heating_range(device)
-                range && heat < range.min
+                least = heating_range(device)&.begin
+                least && heat < least
             end
 
             # A unit's heating range, whatever mode it is in now.

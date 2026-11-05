@@ -9,6 +9,7 @@ module Thermidor
         # holds it.
         class Plan
             include DevicePlan
+            include PumpPlan
             include CyclePlan
             include HeldDevices
 
@@ -45,11 +46,10 @@ module Thermidor
             end
 
             def run
-                @actions  = Actions.new
-                @warnings = []
+                start
                 sources.each { |source, rooms| pump(source, rooms) }
                 @rooms.each do |room|
-                    radiators(room)
+                    radiators(uncut(room))
                     unheated(room)
                     against_band(room)
                 end
@@ -59,108 +59,32 @@ module Thermidor
 
             private
 
-            # { Source => [Room, ...] } over the rooms with air conditioning,
-            # held or not.
-            def sources
-                pairs = @rooms.flat_map do |room|
-                    units(room).map { [it.source, room] }
-                end
-                pairs.group_by(&:first).to_h do |name, found|
-                    rooms = found.map(&:last).uniq
-                    [source(name, rooms), rooms]
-                end
+            # cut: { zone => the heat pumps leaving it needing heat }.
+            def start
+                @actions  = Actions.new
+                @warnings = []
+                @cut      = Hash.new { |hash, zone| hash[zone] = [] }
             end
 
-            # Its direction from the rooms with a unit of its own in the
-            # plan: one switched off by hand cannot use it.
-            def source(name, rooms)
-                held = @held.fetch(name, :none)
-                Source.new(name, rooms, current(rooms, name), @settings,
-                           held: held == :none ? Source::FREE : held)
-            end
-
-            # The room's units, held or not; on source only when given.
-            def units(room, source = nil)
-                all = room.aircons + room.held.grep(Aircon)
-                source ? all.select { it.source == source } : all
-            end
-
-            def current(rooms, source)
-                masters(rooms, source).map { Plan.direction_of(it.mode) }
-                                      .compact.first
-            end
-
-            # A unit standing for each system, its master's when there: the
-            # mode is the system's, every unit reports it, and it is set
-            # through the master whichever stands. One unread (nil mode)
-            # never stands: its system's mode would read as unknown.
-            def masters(rooms, source)
-                rooms.flat_map { units(it, source) }.select(&:mode)
-                     .sort_by { it.master ? 0 : 1 }
-                     .uniq(&:system)
-                     .reject { @aside.include?(it.system) }
-            end
-
-            def pump(source, rooms)
-                masters(rooms, source.name).each { mode(source, it) }
-                rooms.each { aircons(it, source) }
-                source.unserved.each do |room|
-                    @warnings << "#{room.zone}: needs #{room.need}, but " \
-                                 "#{source} #{source.direction || "stays off"}"
-                end
-                held_against(source)
-            end
-
-            # A unit held by hand on a source whose other rooms just gave
-            # it the other direction: its own room did not vote, so it
-            # would otherwise lose its hand silently.
-            def held_against(source)
-                source.overridden.each do |room, unit|
-                    was = DOING.fetch(Plan.direction_of(unit.mode))
-                    now = DOING.fetch(source.direction)
-                    @warnings << "#{room.zone}: #{unit.label} " \
-                                 "held #{was}, the heat pump goes #{now}"
-                end
-            end
-
-            # A system's mode, set through its master zone; one in aux is
-            # heating already. Left in auto with no direction to give, said.
-            def mode(source, master)
-                wanted = source.direction
-                return left_in_auto(source, master) if wanted.nil?
-                return if Plan.direction_of(master.mode) == wanted
-                @actions.mode(master.system, master.mode, wanted, source)
-            end
-
-            def left_in_auto(source, master)
-                return unless master.mode == :auto
-                @warnings << "#{master.system}: left in auto: the heat " \
-                             "pump #{source} has no direction now"
-            end
-
-            # With no direction, a unit in fan, dry or auto is left running.
-            def aircons(room, source)
-                direction = source.direction
-                targets = aircon_targets(room, direction)
-                room.aircons.select { it.source == source.name }
-                    .reject { direction.nil? && RUNNING.include?(it.mode) }
-                    .each { aircon(room, it, targets[it.label], direction) }
-            end
-
-            # { label => the setpoint each unit should hold in `direction`,
-            # nil for off }.
-            def aircon_targets(room, direction)
-                return {} if direction.nil? || room.need == opposite(direction)
-                return Strategy.heat(room, @settings) if direction == :heat
-                room.aircons.to_h { [it.label, room.band&.cool] }
-            end
-
-            # A room needing heat whose devices may not heat now.
+            # A room needing heat that none of its devices heat, said with
+            # why; one whose devices are all unread or held is said
+            # elsewhere.
             def unheated(room)
-                return if room.excluded.empty? || room.need != :heat
+                return unless room.need == :heat
+                read = (room.radiators + room.aircons).select(&:mode)
+                return if read.empty?
                 return if Strategy.heat(room, @settings).values.any?
-                @warnings << "#{room.zone}: needs heat, but " \
-                             "#{room.excluded.join(", ")} is excluded now"
+                why = unheated_why(room, read)
+                @warnings << "#{room.zone}: needs heat, but #{why}"
+            end
+
+            def unheated_why(room, read)
+                able = read.select { it.caps&.heat }
+                return "no device can heat it" if able.empty?
+                if able.none? { Roles.heats?(it, room.excluded) }
+                    return "#{room.excluded.join(", ")} is excluded now"
+                end
+                format("no device heats as low as %.1f °C", room.band.heat)
             end
 
             def opposite(direction) = direction == :heat ? :cool : :heat
