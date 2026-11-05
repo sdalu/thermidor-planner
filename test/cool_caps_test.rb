@@ -32,6 +32,19 @@ class CoolCapsTest < Minitest::Test
         assert_empty result.warnings
     end
 
+    # The pump cooling within its least run: the heat-only unit is
+    # switched off all the same, not kept on.
+    def test_a_unit_that_cannot_cool_is_not_kept_on_by_min_on
+        office = room("office", 26.0, unit(1, HEAT_ONLY, on: true,
+                                                         mode: :cool))
+        guest = room("guest", 26.0, unit(2, AIRCON_CAPS, on: true,
+                                                         mode: :cool))
+        settings = StrategySettings.new(pump: PumpSettings.new(min_on: 15))
+        pumps = { "pump" => PumpState.new(running: true, switched_ago: 5) }
+        result = Plan.new([office, guest], settings:, pumps:).run
+        assert_equal [[:power, true, false]], changes(result, "unit:1")
+    end
+
     private
 
     def plan(*rooms) = Plan.new(rooms).run
@@ -46,9 +59,9 @@ class CoolCapsTest < Minitest::Test
                  aircons: [unit], measured: temperature)
     end
 
-    def unit(id, caps, on: false)
+    def unit(id, caps, on: false, mode: :heat)
         Aircon.new(ref: id.to_s, label: "unit:#{id}", caps:, system: "h:1",
                    source: "pump", master: id == 1, temperature: nil, on:,
-                   mode: :heat, setpoint: 19.0, range: 15.0..30.0, step: 0.5)
+                   mode:, setpoint: 19.0, range: 15.0..30.0, step: 0.5)
     end
 end

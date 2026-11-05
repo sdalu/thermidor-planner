@@ -35,14 +35,14 @@ module Thermidor
             # pumps: { source => PumpState }, what the caller knows of the
             # heat pumps (a direction held, running, since when); aside:
             # the systems (their labels) left to themselves, whose mode is
-            # not set.
+            # not set, their units read held from the start.
             def initialize(rooms, settings: StrategySettings.new,
                            translation: AsIs.new, pumps: {}, aside: [])
-                @rooms       = rooms
+                @aside       = aside
+                @rooms       = rooms.map { holding_aside(it) }
                 @settings    = settings
                 @translation = translation
                 @pumps       = pumps
-                @aside       = aside
             end
 
             def run
@@ -58,6 +58,17 @@ module Thermidor
             end
 
             private
+
+            # The room with its units (read) of a system set aside held,
+            # as switched outside the planner: not planned, ranked nor
+            # voted through, its reading still the room's.
+            def holding_aside(room)
+                aside, kept = room.aircons.partition do |unit|
+                    !unit.mode.nil? && @aside.include?(unit.system)
+                end
+                return room if aside.empty?
+                room.with(aircons: kept, held: room.held + aside)
+            end
 
             # cut: { zone => the heat pumps leaving it needing heat }.
             def start

@@ -18,14 +18,16 @@ class PlanAsideTest < Minitest::Test
     end
 
     # guest, hot, has only a unit set aside: it does not tie the pump
-    # against office, its unit is not switched off, nor said unserved.
+    # against office, its unit is not switched off, nor said unserved;
+    # held cooling against the heat pump heating, it is said so.
     def test_a_room_does_not_vote_through_a_unit_set_aside
         office = room("office", unit(1, "h:1"), 18.0)
         guest = room("guest", unit(2, "h:2", mode: :cool), 28.0)
         result = plan([office, guest], aside: %w[h:2])
         refute(result.actions.any? { it.device == "unit:2" })
         refute(result.actions.any? { it.device == "h:2" })
-        assert_empty result.warnings
+        assert_equal ["guest: unit:2 held cooling, the heat pump goes " \
+                      "heating"], result.warnings
     end
 
     # Under cheapest, a room needing heat whose only unit is set aside

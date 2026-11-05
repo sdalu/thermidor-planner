@@ -136,10 +136,11 @@ module Thermidor
             def kept(entry) = [*entry.first(2), KEEP]
 
             # What ends the least time running for a unit: its energy
-            # excluded now, a direction it does not run, or its room
-            # urgent past its band the warm way.
+            # excluded now, a cooling it cannot give, a direction it does
+            # not run, or its room urgent past its band the warm way.
             def freed?(room, unit)
                 (direction == :heat && !Roles.heats?(unit, room.excluded)) ||
+                    (direction == :cool && !Roles.cools?(unit)) ||
                     Plan.direction_of(unit.mode) != direction ||
                     urgent?(room, :warm)
             end

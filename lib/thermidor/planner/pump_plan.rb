@@ -23,28 +23,10 @@ module Thermidor
 
             # Its direction from the rooms with a unit of its own in the
             # plan: one switched off by hand cannot use it, nor one of a
-            # system set aside, which the rooms it is given leave out.
+            # system set aside, held from the start (Plan#holding_aside).
             def source(name, rooms)
-                Source.new(name, rooms.map { besides(it) },
-                           current(rooms, name), @settings,
+                Source.new(name, rooms, current(rooms, name), @settings,
                            state: @pumps[name] || PumpState.new)
-            end
-
-            # The room without its units (read) of a system set aside.
-            def besides(room)
-                room.with(aircons: room.aircons.reject { aside?(it) })
-            end
-
-            def aside?(unit) = !unit.mode.nil? && @aside.include?(unit.system)
-
-            # The zones needing heat whose units on source are all set
-            # aside: their radiators heat them.
-            def set_aside(source, rooms)
-                rooms.select do |room|
-                    units = room.aircons.select { it.source == source.name }
-                    room.need == :heat && units.any? &&
-                        units.all? { aside?(it) }
-                end.map(&:zone)
             end
 
             # The room's units, held or not; on source only when given.
@@ -83,8 +65,7 @@ module Thermidor
                 targets = cycle.targets
                 rooms.each { aircons(it, source, targets) }
                 @warnings.concat(cycle.warnings)
-                cut(source, cycle.rested + source.stepped.map(&:zone) +
-                            set_aside(source, rooms))
+                cut(source, cycle.rested + source.stepped.map(&:zone))
             end
 
             # Its units planned as one (PumpCycle), from each one's target.
@@ -100,18 +81,15 @@ module Thermidor
             end
 
             # The room's units on source that are planned: with no
-            # direction, one in fan, dry or auto is left running; one of a
-            # system set aside (read) is left to itself.
+            # direction, one in fan, dry or auto is left running.
             def planned(room, source)
                 direction = source.direction
                 room.aircons.select { it.source == source.name }
                     .reject { direction.nil? && Plan::RUNNING.include?(it.mode) }
-                    .reject { aside?(it) }
             end
 
             # The zones the pump leaves to their radiators (#uncut): those
-            # stepping aside, those whose units it holds while it rests,
-            # those whose units on it are all set aside.
+            # stepping aside, those whose units it holds while it rests.
             def cut(source, zones)
                 zones.each { @cut[it] << source.name }
             end

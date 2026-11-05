@@ -72,11 +72,12 @@ module Thermidor
             def devices = radiators + aircons + held
 
             # The room's temperature: the measured one, else what its
-            # devices read, averaged; nil without either.
+            # devices read, averaged, held ones included (switched by hand,
+            # a device still reads its room); nil without either.
             def temperature = measured || devices_temperature
 
             def devices_temperature
-                readings = (radiators + aircons).filter_map(&:temperature)
+                readings = devices.filter_map(&:temperature)
                 readings.sum.fdiv(readings.size).round(1) unless readings.empty?
             end
 

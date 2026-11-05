@@ -43,6 +43,22 @@ class CostMarginTest < Minitest::Test
                           .offsets(:cheapest, MARGIN))
     end
 
+    # Costs below zero (paid to use it, an export price): the margin
+    # still keeps a lead costing no more than the least by that fraction
+    # of it.
+    def test_a_negative_cost_keeps_the_last_lead_within_the_margin
+        room = cheap(valve: -0.098, unit: -0.100, led: %w[valve:a])
+        assert_equal({ "valve:a" => 0.0, "unit:a" => nil },
+                     Roles.new(room, 20.0).offsets(:cheapest, MARGIN))
+    end
+
+    # Equal costs: a kept lead stays alone, the other not joining.
+    def test_an_equal_cost_does_not_join_a_kept_lead
+        room = cheap(valve: 0.1, unit: 0.1, led: %w[valve:a])
+        assert_equal({ "valve:a" => 0.0, "unit:a" => nil },
+                     Roles.new(room, 20.0).offsets(:cheapest, MARGIN))
+    end
+
     def test_a_negative_margin_is_refused
         assert_raises(ArgumentError) { StrategySettings.new(cost_margin: -0.1) }
     end

@@ -151,7 +151,7 @@ module Thermidor
 
             def kept_lead(least, margin)
                 return [] unless margin && @room.led
-                bound = least * (1 + margin)
+                bound = least + (least.abs * margin)
                 @parts.map(&:last).select do |device|
                     @room.led.include?(device.label) &&
                         @costs[device.label] <= bound
