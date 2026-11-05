@@ -85,18 +85,22 @@ module Thermidor
                 devices_temperature&.then { "#{it} (devices)" }
             end
 
-            # :heat below the band (lifted by a raise on one of its
-            # devices' energies), :cool above it, else nil; nil without a
-            # band.
+            # :heat below the band (lifted by a raise on the energy of one
+            # of its devices that may heat), :cool above it, else nil; nil
+            # without a band.
             def need
                 now = band && temperature or return
                 return :heat if band.heat && now < band.heat + lift
                 :cool if band.cool && now > band.cool
             end
 
+            # A raise's lift, by the devices that may heat: read, able to,
+            # on an energy not excluded now.
             def lift
-                energies = (radiators + aircons).filter_map { it.caps&.energy }
-                effects.lift(energies.uniq)
+                taking = (radiators + aircons).select do |device|
+                    device.mode && Roles.heats?(device, excluded)
+                end
+                effects.lift(taking.map { it.caps.energy }.uniq)
             end
         end
 

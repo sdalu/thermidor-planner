@@ -120,7 +120,8 @@ one device of each class of given capabilities, the lead first.
 energy: `preferred` energies lead, `avoided` ones back up (those nearest
 the lead taking it when none is left), `caps` keep a device at most so
 far under the band, `raises` lift it over it (the room needing heat up
-to that).
+to that, when a device on that energy may heat it: read, able to heat,
+its energy not excluded now).
 
 ## Heat pumps
 
