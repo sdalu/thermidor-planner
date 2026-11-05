@@ -81,12 +81,14 @@ module Thermidor
             end
 
             def unread(room, label)
-                @warnings << "#{room.zone}: #{label} not read: left as it is"
+                notice("#{room.zone}: #{label} not read: left as it is",
+                       kind: :unread, zone: room.zone, device: label)
             end
 
             def no_least(room, label)
-                @warnings << "#{room.zone}: #{label} has no least target: " \
-                             "left as it is"
+                notice("#{room.zone}: #{label} has no least target: " \
+                       "left as it is",
+                       kind: :no_least, zone: room.zone, device: label)
             end
         end
     end

@@ -113,10 +113,13 @@ module Thermidor
             def initialize(offset: nil, **) = super
         end
 
+        # actions: Action, ...; warnings: Notice, ..., a translation's
+        # notes after them as it gave them.
         Result = Data.define(:actions, :warnings)
     end
 end
 
+require_relative "planner/notice"
 require_relative "planner/translation"
 require_relative "planner/pump_settings"
 require_relative "planner/strategy"
@@ -126,6 +129,7 @@ require_relative "planner/actions"
 require_relative "planner/fit"
 require_relative "planner/device_plan"
 require_relative "planner/pump_cycle"
+require_relative "planner/pump_notices"
 require_relative "planner/pump_plan"
 require_relative "planner/held_devices"
 require_relative "planner/plan"

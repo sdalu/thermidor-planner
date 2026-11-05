@@ -10,6 +10,7 @@ module Thermidor
         class Plan
             include DevicePlan
             include PumpPlan
+            include PumpNotices
             include HeldDevices
 
             # Modes a system runs in without its heat pump: what a caller
@@ -86,7 +87,8 @@ module Thermidor
                 return if read.empty?
                 return if Strategy.heat(room, @settings).values.any?
                 why = unheated_why(room, read)
-                @warnings << "#{room.zone}: needs heat, but #{why}"
+                notice("#{room.zone}: needs heat, but #{why}",
+                       kind: :unheated, zone: room.zone)
             end
 
             def unheated_why(room, read)
@@ -97,6 +99,9 @@ module Thermidor
                 end
                 format("no device heats as low as %.1f °C", room.band.heat)
             end
+
+            # A warning (Notice): its sentence and what it is about.
+            def notice(text, **about) = @warnings << Notice.new(text, **about)
 
             def opposite(direction) = direction == :heat ? :cool : :heat
 

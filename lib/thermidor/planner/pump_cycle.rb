@@ -156,8 +156,10 @@ module Thermidor
 
             def say(ago, least)
                 did = running? ? "running: started" : "stopped: stopped"
-                @warnings << "#{@source}: kept #{did} #{ago.round} min " \
-                             "ago, at least #{least}"
+                @warnings << Notice.new("#{@source}: kept #{did} " \
+                                        "#{ago.round} min ago, at least " \
+                                        "#{least}",
+                                        kind: :kept, source: @source.name)
             end
         end
     end

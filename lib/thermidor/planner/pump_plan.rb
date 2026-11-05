@@ -96,28 +96,6 @@ module Thermidor
                 zones.each { @cut[it] << source.name }
             end
 
-            # The rooms needing what the pump does not give, said; one
-            # needing heat is cut from it, for its radiators (#uncut).
-            def unserved(source)
-                source.unserved.each do |room|
-                    @cut[room.zone] << source.name if room.need == :heat
-                    @warnings << "#{room.zone}: needs #{room.need}, but " \
-                                 "#{source} #{source.direction || "stays off"}"
-                end
-            end
-
-            # A unit held by hand on a source whose other rooms just gave
-            # it the other direction: its own room did not vote, so it
-            # would otherwise lose its hand silently.
-            def held_against(source)
-                source.overridden.each do |room, unit|
-                    was = Plan::DOING.fetch(Plan.direction_of(unit.mode))
-                    now = Plan::DOING.fetch(source.direction)
-                    @warnings << "#{room.zone}: #{unit.label} " \
-                                 "held #{was}, the heat pump goes #{now}"
-                end
-            end
-
             # A system's mode, set through its master zone; one in aux is
             # heating already. Left in auto with no direction to give, said.
             def mode(source, master)
@@ -125,12 +103,6 @@ module Thermidor
                 return left_in_auto(source, master) if wanted.nil?
                 return if Plan.direction_of(master.mode) == wanted
                 @actions.mode(master.system, master.mode, wanted, source)
-            end
-
-            def left_in_auto(source, master)
-                return unless master.mode == :auto
-                @warnings << "#{master.system}: left in auto: the heat " \
-                             "pump #{source} has no direction now"
             end
 
             # Each planned unit of the room on source to its target.

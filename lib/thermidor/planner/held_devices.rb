@@ -42,8 +42,9 @@ module Thermidor
                 band = room.band or return
                 room.held.each do |device|
                     line = past_band(room, device, band) or next
-                    @warnings << "#{room.zone}: #{device.label} " \
-                                 "left on, #{line}"
+                    notice("#{room.zone}: #{device.label} left on, #{line}",
+                           kind: :past_band, zone: room.zone,
+                           device: device.label)
                 end
             end
 

@@ -75,7 +75,8 @@ and takes no part. `caps` answers `heat`, `cool`, `quiet`,
 `Plan.new(rooms, settings:, translation:, pumps:, aside:).run` returns a
 `Result`: `actions`, each an `Action` (zone, device label, setting
 `:mode`, `:power`, `:target` or `:setpoint`, from, to, offset, why), and
-`warnings`, sentences about what it could not do.
+`warnings`, sentences about what it could not do: each a `Notice`
+(below), the translation's `notes` after them as it gave them.
 
 - `settings`: a `StrategySettings`, comfort's gap (0.5 °C) and `pump`,
   a `PumpSettings` saying how a heat pump is run (below).
@@ -93,6 +94,21 @@ within one step of what the device holds is left alone. A room that
 needs heat and gets none from its devices is warned of with why: an
 energy excluded now, no device heating as low as its band, or no
 device able to heat.
+
+A `Notice` is a `String`, the sentence, which also says what it is
+about: `kind`, and `zone`, `device` (a device's or a system's label)
+and `source` (a heat pump's name), each nil when it is not about one.
+
+| `kind` | Said of | About |
+| :----- | :------ | :---- |
+| `:unread` | a device not read, left as it is | zone, device |
+| `:no_least` | a radiator not to heat with no least target, left | zone, device |
+| `:unheated` | a room needing heat that none of its devices heat, with why | zone |
+| `:unserved` | a room needing what its heat pump does not give | zone, source |
+| `:held_against` | a unit held by hand the other way from its heat pump | zone, device, source |
+| `:left_in_auto` | a system left in auto, its heat pump with no direction | device, source |
+| `:past_band` | a device held by hand working past the band | zone, device |
+| `:kept` | a heat pump's units kept as they are for its least time | source |
 
 ## Strategies
 

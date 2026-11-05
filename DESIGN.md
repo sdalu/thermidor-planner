@@ -12,6 +12,12 @@ ducks: a device's `caps`, and a translation. So the planner has no
 connection, no database and no clock of its own, and its tests build
 rooms by hand.
 
+A warning is a sentence for a person and a `Notice` for a program: its
+kind and the zone, device and heat pump it is about, so a caller
+choosing which to show or pass on reads fields rather than parsing the
+words. It stays a `String` with the same words, since callers already
+match on them.
+
 It came out of ClimatControl, where it was written against tado
 thermostats and Airzone units. What made it theirs was naming, not
 logic: a device's label built from a tado serial, an Airzone system
