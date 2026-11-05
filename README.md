@@ -113,8 +113,9 @@ all of one kind (the same caps) have nothing to be ranked against and
 heat at the band whatever the strategy. A device whose `caps` is nil
 follows the best of its class. `Strategy.heat(room, settings)` gives
 each device's target by label, so labels are unique in a room;
-`Strategy.uses(name, settings, caps)` says what a strategy does with
-one device of each class of given capabilities, the lead first.
+`Strategy.uses(name, settings, caps, costs: {})` says what a strategy
+does with one device of each class of given capabilities (`costs`, for
+`cheapest`, by class too), the lead first.
 
 `Effects` are what a room's energy rules do, each device by its own
 energy: `preferred` energies lead, `avoided` ones back up (those nearest

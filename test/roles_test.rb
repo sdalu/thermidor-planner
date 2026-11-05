@@ -68,6 +68,19 @@ class RolesTest < Minitest::Test
                      Strategy.uses(:cheapest, StrategySettings.new, caps)
     end
 
+    # Costs by class: cheapest takes the least costly, equal ones
+    # together.
+    def test_uses_takes_costs_by_class
+        caps = { radiator: RADIATOR, aircon: AIRCON }
+        given = StrategySettings.new
+        assert_equal [[:radiator, 0.0]],
+                     Strategy.uses(:cheapest, given, caps,
+                                   costs: { radiator: 0.1, aircon: 0.3 })
+        assert_equal [[:radiator, 0.0], [:aircon, 0.0]],
+                     Strategy.uses(:cheapest, given, caps,
+                                   costs: { radiator: 0.2, aircon: 0.2 })
+    end
+
     private
 
     def offsets(strategy, radiator: RADIATOR, aircon: AIRCON)

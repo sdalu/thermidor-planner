@@ -47,16 +47,25 @@ module Thermidor
             # What `name` does with device classes of these capabilities
             # ({ :radiator or :aircon => caps }), in a room holding a
             # device of each: [[class, offset from the band's heat side],
-            # ...], the lead first; the others take no part.
-            def uses(name, settings, caps)
+            # ...], the lead first; the others take no part. costs: what a
+            # kWh of heat costs from each class ({ class => cost }), for
+            # cheapest.
+            def uses(name, settings, caps, costs: {})
+                Roles.new(sample(name, caps, costs), 20.0)
+                     .offsets(name, settings).compact
+                     .sort_by { -it.last }.map { [it.first.to_sym, it.last] }
+            end
+
+            # A room holding a device of each class, labelled by its
+            # class, costs by those labels.
+            def sample(name, caps, costs)
                 devices = caps.to_h do |role, each|
                     [role, [Sample.new(role.to_s, each, nil, :heat)]]
                 end
-                room = Room.new(zone: nil, band: nil, strategy: name,
-                                radiators: devices.fetch(:radiator, []),
-                                aircons: devices.fetch(:aircon, []))
-                Roles.new(room, 20.0).offsets(name, settings).compact
-                     .sort_by { -it.last }.map { [it.first.to_sym, it.last] }
+                Room.new(zone: nil, band: nil, strategy: name,
+                         radiators: devices.fetch(:radiator, []),
+                         aircons: devices.fetch(:aircon, []),
+                         costs: costs.transform_keys(&:to_s))
             end
 
             # { device label => heat target, nil for none } over a room's
