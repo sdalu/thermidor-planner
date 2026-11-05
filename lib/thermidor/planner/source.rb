@@ -4,7 +4,8 @@ module Thermidor
     module Planner
         # The one direction (:heat, :cool, or nil to stay off) of a heat
         # pump shared by `rooms`, from what they need, a room needing heat
-        # counting only when its unit may heat it: on a conflict, rooms
+        # counting only when its unit may heat it, one needing cool only
+        # when its unit can cool: on a conflict, rooms
         # needing heat that have radiators to give it drop out; then the
         # most rooms win, heat on a tie. With no need either way, the
         # direction it has (`current`) stays. With hysteresis (the
@@ -67,13 +68,12 @@ module Thermidor
                 room.aircons.any? { it.source == @name && it.mode }
             end
 
-            # [rooms needing heat, rooms needing cool]; margin: with the
-            # pump's hysteresis against the direction it runs.
+            # [rooms needing heat, rooms needing cool] that a unit on this
+            # pump may serve, the rooms stepping aside on a conflict left
+            # out; margin: with the pump's hysteresis against the
+            # direction it runs.
             def votes(rooms, margin: false)
-                heats = rooms.select do |room|
-                    needs?(room, :heat, margin) && heats?(room, :aircon)
-                end
-                cools = rooms.select { needs?(it, :cool, margin) }
+                heats, cools = wanting(rooms, margin)
                 heats = heats.reject { radiators?(it) } if
                     heats.any? && cools.any?
                 [heats, cools]
@@ -81,12 +81,14 @@ module Thermidor
 
             # The rooms needing heat that step aside on a conflict.
             def stepped_aside(rooms)
-                heats = rooms.select do |room|
-                    needs?(room, :heat, false) && heats?(room, :aircon)
-                end
-                cools = rooms.select { needs?(it, :cool, false) }
+                heats, cools = wanting(rooms, false)
                 return [] if heats.empty? || cools.empty?
                 heats.select { radiators?(it) }
+            end
+
+            def wanting(rooms, margin)
+                [rooms.select { needs?(it, :heat, margin) && heats?(it) },
+                 rooms.select { needs?(it, :cool, margin) && cools?(it) }]
             end
 
             # Whether room has radiators able to heat it to its band, the
@@ -96,16 +98,20 @@ module Thermidor
                 room.radiators.any? { Roles.able?(it, room.excluded, heat) }
             end
 
-            # Whether the strategy has one of room's `kind` of devices heat:
-            # for units, one on this heat pump.
-            def heats?(room, kind)
+            # Whether the strategy has one of room's units on this heat
+            # pump heat.
+            def heats?(room)
                 targets = Strategy.heat(room, @settings)
-                devices = if kind == :aircon
-                              room.aircons.select { it.source == @name }
-                          else
-                              room.radiators
-                          end
-                devices.any? { targets[it.label] }
+                room.aircons.select { it.source == @name }
+                    .any? { targets[it.label] }
+            end
+
+            # Whether room has a unit of its own on this heat pump, read,
+            # that can cool it.
+            def cools?(room)
+                room.aircons.any? do |unit|
+                    unit.source == @name && unit.mode && Roles.cools?(unit)
+                end
             end
 
             # The rooms needing what the direction does not give.

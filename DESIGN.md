@@ -162,7 +162,9 @@ energy not excluded now, and able to go as low as the band. A room's
 gas radiator heats while its electric one rests at its least target; a
 unit whose least setpoint is above an away band is switched off rather
 than set to that least, above the band. A room votes for a heat pump
-only by a unit on it that may heat the room.
+only by a unit on it that may heat the room, or cool it: a unit that
+heats only (`caps.cool` false) is off while its pump cools, and a hot
+room with no other unit there cannot turn the pump to cool for nothing.
 
 A heat pump that leaves a room needing heat (held off, voted the other
 way, stopped) leaves its radiators to it: they are planned as if the

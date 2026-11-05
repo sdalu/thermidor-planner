@@ -28,6 +28,10 @@ module Thermidor
                 caps.heat && !excluded.include?(caps.energy)
             end
 
+            # Whether a unit may cool: its caps do not say it cannot (one
+            # without caps follows its class, which cools).
+            def self.cools?(device) = device.caps&.cool != false
+
             # Whether a device takes part in heating to `heat`: read, it may
             # heat, and as low as that (a unit by its heating range,
             # whatever mode it is in now).

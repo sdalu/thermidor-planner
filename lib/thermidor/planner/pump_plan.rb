@@ -139,11 +139,13 @@ module Thermidor
             end
 
             # { label => the setpoint each unit should hold in `direction`,
-            # nil for off }.
+            # nil for off }: a unit that cannot cool has none to cool.
             def aircon_targets(room, direction)
                 return {} if direction.nil? || room.need == opposite(direction)
                 return Strategy.heat(room, @settings) if direction == :heat
-                room.aircons.to_h { [it.label, room.band&.cool] }
+                room.aircons.to_h do |unit|
+                    [unit.label, (room.band&.cool if Roles.cools?(unit))]
+                end
             end
         end
     end

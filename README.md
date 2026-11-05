@@ -104,7 +104,8 @@ device able to heat.
 
 The strategies rank devices, each by its own capabilities, whatever
 order they are listed in. Cooling is always the units', at the band's
-cool side. A device takes part when it was read, can heat, on an
+cool side, those whose `caps.cool` is not false (one that cannot cool is
+off while its pump cools). A device takes part when it was read, can heat, on an
 energy not excluded now, as low as the band's heat side; one that does
 not rests, a radiator at its least target, a unit off. A room's devices
 all of one kind (the same caps) have nothing to be ranked against and
@@ -124,7 +125,8 @@ to that).
 
 The units on one heat pump run one direction. It comes from the rooms
 with a unit on it that is read and planned, needing heat only when one
-of its units on that heat pump may heat it: on a conflict, rooms needing
+of its units on that heat pump may heat it, and cool only when one of
+them can cool it: on a conflict, rooms needing
 heat that have radiators able to heat them step aside, whatever their
 strategy, and their radiators heat them; then the most rooms win; with no
 need either way, the direction stays. A room left needing the other way
