@@ -81,7 +81,7 @@ module Thermidor
                 when :quick then by { 0.0 }
                 when :quiet then by { it.caps.quiet ? 0.0 : nil }
                 when :comfort then comfort(settings.comfort)
-                else cheapest
+                else cheapest(settings.cost_margin)
                 end
             end
 
@@ -125,8 +125,8 @@ module Thermidor
             # The least costly, by the room's costs when every device has
             # one; else the heat pumps alone; with none, the first class
             # (ROLES) holding a device that takes part.
-            def cheapest
-                return costed if @parts.all? { @costs[it.last.label] }
+            def cheapest(margin)
+                return costed(margin) if @parts.all? { @costs[it.last.label] }
                 return by { pump?(it) ? 0.0 : nil } if
                     @parts.any? { pump?(it.last) }
                 first_class
@@ -139,9 +139,23 @@ module Thermidor
                 end
             end
 
-            def costed
+            # The least costly, together when equal; the last lead
+            # (room.led) kept while it costs no more than the least by the
+            # margin.
+            def costed(margin)
                 least = @parts.map { @costs[it.last.label] }.min
+                kept = kept_lead(least, margin)
+                return by { kept.include?(it.label) ? 0.0 : nil } if kept.any?
                 by { @costs[it.label] == least ? 0.0 : nil }
+            end
+
+            def kept_lead(least, margin)
+                return [] unless margin && @room.led
+                bound = least * (1 + margin)
+                @parts.map(&:last).select do |device|
+                    @room.led.include?(device.label) &&
+                        @costs[device.label] <= bound
+                end.map(&:label)
             end
 
             def pump?(device)

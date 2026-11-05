@@ -63,7 +63,7 @@ it, and the unit's setpoint is written for the mode it will run in.
 | :--- | :--------- |
 | `Radiator` | a thermostat on a radiator: heats only; mode `:off` or `:heat`, a target on its step and range, `least` the target standing for "not heating" when the range gives none; a range open at an end (`nil..25.0`) is no bound on that side |
 | `Aircon` | an air-conditioning unit: on or off, a mode (`:heat`, `:cool`, `:aux`, `:fan`, `:dry`, `:auto`, `:stop`), a setpoint; `system` the label of the units sharing its mode (set through the `master`), `source` the heat pump its system runs on; `ranges` its setpoints by mode |
-| `Room` | a zone's band (nil: nothing to hold, its devices left off) and strategy, its radiators and units; `measured` its temperature from a reference of its own (else its devices' average), `location` where that reference is, `excluded` the energies that may not heat now, `effects` what its energy rules do besides, `costs` what a kWh of heat costs from each device now (by label, any one unit), `outside` the outside °C now (nil: unknown), `held` its devices switched outside the planner |
+| `Room` | a zone's band (nil: nothing to hold, its devices left off) and strategy, its radiators and units; `measured` its temperature from a reference of its own (else its devices' average), `location` where that reference is, `excluded` the energies that may not heat now, `effects` what its energy rules do besides, `costs` what a kWh of heat costs from each device now (by label, any one unit), `outside` the outside °C now (nil: unknown), `led` the labels of the devices that led it last (nil: unknown), `held` its devices switched outside the planner |
 
 A device read with a nil `mode` is unread: it gets no action, no vote,
 and takes no part. `caps` answers `heat`, `cool`, `quiet`,
@@ -78,8 +78,9 @@ and takes no part. `caps` answers `heat`, `cool`, `quiet`,
 `warnings`, sentences about what it could not do: each a `Notice`
 (below), the translation's `notes` after them as it gave them.
 
-- `settings`: a `StrategySettings`, comfort's gap (0.5 °C) and `pump`,
-  a `PumpSettings` saying how a heat pump is run (below).
+- `settings`: a `StrategySettings`, comfort's gap (0.5 °C), `pump`, a
+  `PumpSettings` saying how a heat pump is run (below), and
+  `cost_margin`, cheapest's margin (below; nil, none).
 - `translation`: makes the band's side into what a device's own sensor
   reads when the room holds it; answers `target(room, device, setpoint,
   mode)` for each device with a `Target` (`celsius`, `gap`), and
@@ -117,7 +118,7 @@ and `source` (a heat pump's name), each nil when it is not about one.
 | `comfort`  | the gentlest devices by propagation (equally gentle ones together), the others a gap behind |
 | `quick`    | every device able to heat, at once |
 | `quiet`    | the quiet devices only |
-| `cheapest` | the devices whose heat costs least, by the room's `costs` (equal costs together); without a cost for every device, the heat pumps alone (heat and cool on electricity), else the radiators |
+| `cheapest` | the devices whose heat costs least, by the room's `costs` (equal costs together), the last lead (`room.led`) kept while it costs no more than the least by `cost_margin`; without a cost for every device, the heat pumps alone (heat and cool on electricity), else the radiators |
 
 The strategies rank devices, each by its own capabilities, whatever
 order they are listed in. Cooling is always the units', at the band's

@@ -5,8 +5,16 @@ module Thermidor
         # How the strategies apply in the house: comfort's gap, how far
         # below the heat side its other sources come in (°C); pump, how a
         # heat pump changes direction (PumpSettings).
-        StrategySettings = Data.define(:comfort, :pump) do
-            def initialize(comfort: 0.5, pump: PumpSettings.new) = super
+        # cost_margin: under cheapest, how much more (a fraction) the kWh
+        # of heat of a device that led last (room.led) may cost than the
+        # cheapest's and keep the lead; nil, none.
+        StrategySettings = Data.define(:comfort, :pump, :cost_margin) do
+            def initialize(comfort: 0.5, pump: PumpSettings.new,
+                           cost_margin: nil)
+                raise ArgumentError, "negative cost_margin #{cost_margin}" if
+                    cost_margin&.negative?
+                super
+            end
         end
 
         # What a strategy asks of a room's radiators and air conditioning,

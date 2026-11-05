@@ -83,6 +83,14 @@ without a cost cannot be put above or below the others; then it falls
 back on a guess, a heat pump (heats and cools on electricity) taken as
 the cheapest, and with none the radiators.
 
+Costs move with the weather, a heat pump's with the outside temperature,
+so with the outside hovering where two devices cost the same the lead
+would swap at every plan. A cost margin keeps the device that led last
+(`room.led`, the caller's to say) while it costs no more than the
+cheapest by that fraction: the lead changes only for a saving worth it.
+The planner keeps no memory of its own plans, so the last lead is an
+input like the compressor's state.
+
 A translation is asked of each device, not of its class: two radiators
 in one room may sit by sensors that read the room differently, and only
 the caller knows which share one.

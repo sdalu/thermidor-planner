@@ -56,14 +56,16 @@ module Thermidor
         # costs: what a kWh of heat costs from each device now, by label,
         # in any one unit, for cheapest (none: a heat pump is taken as
         # the cheapest); outside: the outside °C now, nil unknown, for the
-        # pump's mild-weather settings (PumpSettings).
+        # pump's mild-weather settings (PumpSettings); led: the labels of
+        # the devices that led it last, nil unknown, for cheapest's cost
+        # margin (StrategySettings).
         ROOM_DEFAULTS = { excluded: [], measured: nil, location: nil,
                           held: [], effects: Effects.none,
-                          costs: {}, outside: nil }.freeze
+                          costs: {}, outside: nil, led: nil }.freeze
 
         Room = Data.define(:zone, :band, :strategy, :radiators, :aircons,
                            :excluded, :measured, :location, :held,
-                           :effects, :costs, :outside) do
+                           :effects, :costs, :outside, :led) do
             def initialize(**) = super(**ROOM_DEFAULTS, **)
 
             # Every device, held or not.
