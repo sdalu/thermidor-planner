@@ -26,6 +26,20 @@ class PumpMildTest < Minitest::Test
         assert_empty plan([nil, 12.0]).actions
     end
 
+    # A room whose units are all unread still gives the outside: the
+    # weather is mild by it, the other room giving none.
+    def test_a_room_with_no_unit_planned_still_says_the_weather
+        unread = Room.new(zone: "u", band: BAND, strategy: :quick,
+                          radiators: [], measured: 19.5, outside: 12.0,
+                          aircons: [unit(1).with(mode: nil, on: nil)])
+        read = Room.new(zone: "r", band: BAND, strategy: :quick,
+                        radiators: [], aircons: [unit(0)], measured: 19.5)
+        settings = StrategySettings.new(pump: PumpSettings.new(mild: 8.0))
+        pumps = { "pump" => PumpState.new(running: false) }
+        result = Plan.new([unread, read], settings:, pumps:).run
+        assert(result.actions.none? { it.setting == :power })
+    end
+
     private
 
     def powers(outsides)

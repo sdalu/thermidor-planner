@@ -26,11 +26,14 @@ module Thermidor
 
             # entries: [[room, unit, target or nil], ...], the pump's units
             # planned; state: its PumpState, nil unknown.
-            def initialize(source, entries, settings, state)
+            # outsides: the outside °C given by the rooms on the pump, its
+            # units planned or not; nil, those of the entries' rooms.
+            def initialize(source, entries, settings, state, outsides: nil)
                 @source    = source
                 @entries   = entries
                 @settings  = settings
                 @state     = state || PumpState.new
+                @outsides  = outsides
                 @warnings  = []
             end
 
@@ -62,7 +65,8 @@ module Thermidor
             # one at least giving one.
             def mild?
                 return false unless direction == :heat
-                outsides = @entries.filter_map { |room, _, _| room.outside }
+                outsides = @outsides ||
+                           @entries.filter_map { |room, _, _| room.outside }
                 outsides.any? && outsides.all? { @settings.mild?(it) } &&
                     @entries.all? { |room, _, _| room.temperature }
             end

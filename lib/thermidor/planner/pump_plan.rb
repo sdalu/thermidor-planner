@@ -77,7 +77,8 @@ module Thermidor
                     end
                 end
                 PumpCycle.new(source, entries, @settings.pump,
-                              @pumps[source.name])
+                              @pumps[source.name],
+                              outsides: rooms.filter_map(&:outside))
             end
 
             # The room's units on source that are planned: with no
