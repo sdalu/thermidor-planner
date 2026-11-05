@@ -57,6 +57,14 @@ class DriftsTest < Minitest::Test
                      Drifts.band(cooling, Setpoint.new(heat: 20, cool: 25))
     end
 
+    # Switched on, or a setpoint in fan: no band holds it.
+    def test_no_band_for_a_drift_neither_off_nor_a_band
+        drift = Drifts.of([room(target: 23.0)], set_to("20.5")).first
+        on = drift.with(setting: :mode, now: "heat")
+        assert_nil Drifts.band(on, nil)
+        assert_nil Drifts.band(drift.with(mode: :fan), nil)
+    end
+
     # A unit unread (its controller out of reach, say): its nil
     # on is not a change from any row, so no drift, nor a false one.
     def test_an_unread_unit_is_no_drift

@@ -186,6 +186,7 @@ little does not make the device move.
 
 `Drifts` says what was changed outside and gives the band that would
 hold it; what to do about it (adopt it, how long, notify whom) is the
-caller's policy, so it stays there. A system's mode changing makes its
+caller's policy, so it stays there. A drift no band can hold (a unit
+switched on, a setpoint in fan) gets none rather than one guessed. A system's mode changing makes its
 units report the other mode's setpoint, so those are not drifts of
 their own.

@@ -156,11 +156,14 @@ module Thermidor
             end
 
             # The band for drift's zone, from band (the zone's now): off
-            # when switched off; else the side the device works on set to
-            # its value less the offset the plan had added, the other side
-            # kept at least DEADBAND away.
+            # when switched off; for a temperature the band can take
+            # (Drift#band?), the side the device works on set to its value
+            # less the offset the plan had added, the other side kept at
+            # least DEADBAND away; nil for any other drift (switched on,
+            # handed to its own schedule, a setpoint in fan or dry).
             def band(drift, band)
                 return Schedule::Setpoint.new if drift.off?
+                return unless drift.band?
                 room = (Float(drift.now) - drift.offset.to_f).round(1)
                 return cooled(room, band&.heat) if drift.mode == :cool
                 heated(room, band&.cool)

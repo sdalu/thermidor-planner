@@ -191,7 +191,10 @@ one working past the band is warned of. `Drifts.of(rooms, last,
 planner:)` finds each setting read other than what was last set (`last`:
 `{ [label, setting] => row }`, a row answering `setting`, `from`, `to`,
 `at`, `offset`); `Drifts.band(drift, band)` is the band that holds what
-was set from outside, for the room.
+was set from outside, for the room: an empty band for a drift switched
+off (`off?`), one from the value for a temperature the band can take
+(`band?`), and nil for any other (switched on, set to auto, a setpoint
+in fan or dry).
 
 ## Known shortfalls
 
