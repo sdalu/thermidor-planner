@@ -53,7 +53,7 @@ module Thermidor
             def direction = @source.direction
 
             def running?
-                return @state.running unless @state.running.nil?
+                return @state.running == true unless @state.running.nil?
                 @entries.any? { |_, unit, _| unit.on }
             end
 
@@ -83,7 +83,7 @@ module Thermidor
             end
 
             def under?(room, target, margin)
-                target && room.temperature < target - margin
+                !target.nil? && room.temperature < target - margin
             end
 
             # Its least time running or stopped, said when it holds a
@@ -119,13 +119,13 @@ module Thermidor
 
             # A unit on, kept so while the pump runs its least.
             def kept_on?(room, unit, _target = nil)
-                unit.on && !freed?(room, unit)
+                unit.on == true && !freed?(room, unit)
             end
 
             # A unit off whose room is urgent past its band the cold way:
             # it starts the pump whatever its rest.
             def starts?(room, unit, target)
-                target && !unit.on && urgent?(room, :cold)
+                !target.nil? && !unit.on && urgent?(room, :cold)
             end
 
             def zones_needing_heat(entries)

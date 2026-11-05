@@ -35,7 +35,7 @@ module Thermidor
                 room.with(aircons: room.aircons.reject { aside?(it) })
             end
 
-            def aside?(unit) = unit.mode && @aside.include?(unit.system)
+            def aside?(unit) = !unit.mode.nil? && @aside.include?(unit.system)
 
             # The zones needing heat whose units on source are all set
             # aside: their radiators heat them.

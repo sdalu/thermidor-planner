@@ -58,7 +58,7 @@ module Thermidor
             # Its compressor running, as the caller says, else one of its
             # units on.
             def running?(state, rooms)
-                return state.running unless state.running.nil?
+                return state.running == true unless state.running.nil?
                 rooms.flat_map { it.aircons + it.held.grep(Aircon) }
                      .any? { it.source == @name && it.on }
             end
@@ -155,9 +155,9 @@ module Thermidor
                 now = room.temperature or return false
                 band = room.band or return false
                 if direction == :heat
-                    band.heat && now < band.heat + room.lift - margin
+                    !band.heat.nil? && now < band.heat + room.lift - margin
                 else
-                    band.cool && now > band.cool + margin
+                    !band.cool.nil? && now > band.cool + margin
                 end
             end
 
@@ -173,8 +173,8 @@ module Thermidor
             end
 
             def against?(unit)
-                unit.on && Plan.direction_of(unit.mode) &&
-                    Plan.direction_of(unit.mode) != @direction
+                runs = Plan.direction_of(unit.mode)
+                unit.on == true && !runs.nil? && runs != @direction
             end
         end
     end

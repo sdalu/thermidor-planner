@@ -25,7 +25,7 @@ module Thermidor
             # Whether a device may heat: it can, on an energy not excluded.
             def self.heats?(device, excluded)
                 caps = device.caps or return false
-                caps.heat && !excluded.include?(caps.energy)
+                caps.heat == true && !excluded.include?(caps.energy)
             end
 
             # Whether a unit may cool: its caps do not say it cannot (one
@@ -159,7 +159,7 @@ module Thermidor
             end
 
             def pump?(device)
-                device.caps.cool && device.caps.energy == "electricity"
+                device.caps.cool == true && device.caps.energy == "electricity"
             end
 
             # A device without caps: its class's best offset, nil when none
