@@ -7,7 +7,7 @@ gemspec
 # The bands and strategies planned from: the sibling gem, pinned at a
 # commit (no tag yet), the one ClimatControl pins.
 gem "thermidor-schedule", github: "sdalu/thermidor-schedule",
-                          ref: "c855195f5845a18cd37cfab4baa51231b260aeca"
+                          ref: "bc82c6d4d1e2791c9dab8d567c980aa39911952e"
 
 group :development, :test do
     gem "minitest", "~> 5.25"
