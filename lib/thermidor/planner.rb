@@ -113,6 +113,7 @@ module Thermidor
 end
 
 require_relative "planner/translation"
+require_relative "planner/pump_settings"
 require_relative "planner/strategy"
 require_relative "planner/roles"
 require_relative "planner/source"

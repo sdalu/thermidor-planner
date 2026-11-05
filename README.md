@@ -77,7 +77,8 @@ and takes no part. `caps` answers `heat`, `cool`, `quiet`,
 `:mode`, `:power`, `:target` or `:setpoint`, from, to, offset, why), and
 `warnings`, sentences about what it could not do.
 
-- `settings`: a `StrategySettings`, comfort's gap (0.5 °C).
+- `settings`: a `StrategySettings`, comfort's gap (0.5 °C) and `pump`,
+  a `PumpSettings` saying how a heat pump changes direction (below).
 - `translation`: makes the band's side into what a device's own sensor
   reads when the room holds it; answers `target(room, device, setpoint,
   mode)` for each device with a `Target` (`celsius`, `gap`), and
@@ -121,9 +122,18 @@ to that).
 The units on one heat pump run one direction. It comes from the rooms
 with a unit on it that is read and planned, needing heat only when one
 of its units on that heat pump may heat it: on a conflict, rooms needing
-heat that have radiators step aside; then the most rooms win, heat on a
-tie; with no need either way, the direction stays. A room left needing
-the other way is warned of. Each system's mode is read on a unit that
+heat that have radiators step aside; then the most rooms win; with no
+need either way, the direction stays. A room left needing the other way
+is warned of. How a tie and a room just past its band count is the
+settings' `pump`:
+
+| `PumpSettings` | A room asks for the other direction | A tie |
+| :------------- | :---------------------------------- | :---- |
+| `switch: :heat` (default) | as soon as it is past its band | heat wins |
+| `switch: :hysteresis, margin: 0.5` | only once `margin` °C past its band | the direction it runs stays |
+
+With hysteresis, a pump that is off goes either way with no margin, and
+a room inside the margin is still warned of. Each system's mode is read on a unit that
 was read, its master's first, and set through its master to the heat
 pump's direction, whatever mode it is in (fan, dry, auto, stop
 included). With no direction to give, units in fan, dry or auto are

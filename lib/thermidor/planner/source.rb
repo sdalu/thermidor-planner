@@ -7,9 +7,13 @@ module Thermidor
         # counting only when its unit may heat it: on a conflict, rooms
         # needing heat that have radiators to give it drop out; then the
         # most rooms win, heat on a tie. With no need either way, the
-        # direction it has (`current`) stays. A direction set outside
-        # the planner and held (held: :heat, :cool or nil for neither) wins;
-        # the rooms it does not serve are said.
+        # direction it has (`current`) stays. With hysteresis (the
+        # settings' pump, PumpSettings), a room counts for the direction
+        # the pump does not run only once a margin past its band, and a
+        # tie keeps it; every room needing the other way is said all the
+        # same. A direction set outside the planner and held (held: :heat,
+        # :cool or nil for neither) wins; the rooms it does not serve are
+        # said.
         class Source
             # Nothing held.
             FREE = Object.new.freeze
@@ -19,15 +23,13 @@ module Thermidor
 
             def initialize(name, rooms, current,
                            settings = StrategySettings.new, held: FREE)
-                @name = name
+                @name     = name
                 @settings = settings
-                heats, cools = votes(voters(rooms))
-                @direction = if held.equal?(FREE)
-                                 choose(heats, cools) || current
-                             else
-                                 held
-                             end
-                @unserved   = left_out(heats, cools)
+                @pump     = settings.pump
+                @current  = current
+                voters = voters(rooms)
+                @direction  = held.equal?(FREE) ? chosen(voters) : held
+                @unserved   = left_out(*votes(voters))
                 @overridden = held_against(rooms)
             end
 
@@ -46,9 +48,13 @@ module Thermidor
                 room.aircons.any? { it.source == @name && it.mode }
             end
 
-            def votes(rooms)
-                heats = rooms.select { it.need == :heat && heats?(it, :aircon) }
-                cools = rooms.select { it.need == :cool }
+            # [rooms needing heat, rooms needing cool]; margin: with the
+            # pump's hysteresis against the direction it runs.
+            def votes(rooms, margin: false)
+                heats = rooms.select do |room|
+                    needs?(room, :heat, margin) && heats?(room, :aircon)
+                end
+                cools = rooms.select { needs?(it, :cool, margin) }
                 if heats.any? && cools.any?
                     heats = heats.reject { heats?(it, :radiator) }
                 end
@@ -76,9 +82,37 @@ module Thermidor
                 end
             end
 
+            # The direction the voters give, or the current one when they
+            # give none.
+            def chosen(voters)
+                choose(*votes(voters, margin: true)) || @current
+            end
+
             def choose(heats, cools)
                 return if heats.empty? && cools.empty?
+                return @current if holding? && heats.size == cools.size
                 heats.size >= cools.size ? :heat : :cool
+            end
+
+            # Whether hysteresis holds the pump to a direction it runs.
+            def holding? = @pump.hysteresis? && !@current.nil?
+
+            # Whether room needs direction: past its band, by the margin
+            # when asked and the pump runs the other way.
+            def needs?(room, direction, margin)
+                return room.need == direction unless
+                    margin && holding? && direction != @current
+                past?(room, direction, @pump.margin)
+            end
+
+            def past?(room, direction, margin)
+                now = room.temperature or return false
+                band = room.band or return false
+                if direction == :heat
+                    band.heat && now < band.heat + room.lift - margin
+                else
+                    band.cool && now > band.cool + margin
+                end
             end
 
             # [room, unit] for a unit held by hand on this source, running

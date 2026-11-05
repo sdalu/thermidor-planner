@@ -3,9 +3,10 @@
 module Thermidor
     module Planner
         # How the strategies apply in the house: comfort's gap, how far
-        # below the heat side its other sources come in (°C).
-        StrategySettings = Data.define(:comfort) do
-            def initialize(comfort: 0.5) = super
+        # below the heat side its other sources come in (°C); pump, how a
+        # heat pump changes direction (PumpSettings).
+        StrategySettings = Data.define(:comfort, :pump) do
+            def initialize(comfort: 0.5, pump: PumpSettings.new) = super
         end
 
         # What a strategy asks of a room's radiators and air conditioning,

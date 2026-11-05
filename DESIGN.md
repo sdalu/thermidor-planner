@@ -85,11 +85,22 @@ the caller knows which share one.
 Units on one outdoor unit cannot heat and cool at once. The direction
 is voted by the rooms that can use it: a room needing heat that has
 radiators steps aside on a conflict, since it has another way to be
-heated and the other side has none; then the most rooms win, heat on a
-tie. With no need either way, the direction it has stays. A unit
-unread, or switched off by hand, does not vote: it cannot be known to want either way, nor
+heated and the other side has none; then the most rooms win. With no
+need either way, the direction it has stays. A unit unread, or switched
+off by hand, does not vote: it cannot be known to want either way, nor
 can it use what it would vote for. The losers are told, never silently
 left out.
+
+A tie, and a room a tenth past its band, are where a pump can reverse
+on every run: one cold and one warm room on a shared outdoor unit in
+spring, or a room hovering at its heat side. Whether that is worth
+preventing is the house's call, so it is a setting (`PumpSettings`):
+heat on a tie, the default, never leaves a room cold for the sake of
+the pump; hysteresis keeps the direction it runs on a tie and asks a
+room to be a margin past its band before it counts against it, trading
+a slower answer for fewer reversals. A margin, not a minimum dwell:
+the planner keeps no clock of its own, and a dwell would need the
+caller to say when the direction last changed.
 
 ## Not heating is the least target
 
