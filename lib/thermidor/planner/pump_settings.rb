@@ -31,6 +31,7 @@ module Thermidor
                 switch = values[:switch]
                 raise ArgumentError, "unknown switch #{switch.inspect}" unless
                     PumpSettings::SWITCHES.include?(switch)
+                PumpSettings.given(values)
                 PumpSettings.positive(**values.except(:switch))
                 super(**values)
             end
@@ -48,6 +49,15 @@ module Thermidor
 
         class PumpSettings
             SWITCHES = %i[heat hysteresis].freeze
+
+            # Settings with no off: nil is refused.
+            REQUIRED = %i[margin mild_deadband urgent lead_gap].freeze
+
+            def self.given(values)
+                missing = REQUIRED.select { values[it].nil? }
+                raise ArgumentError, "no #{missing.join(", ")}" if
+                    missing.any?
+            end
 
             # Refuses a negative value among those given (nil: unset).
             def self.positive(**values)

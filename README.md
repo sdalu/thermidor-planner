@@ -125,7 +125,8 @@ to that).
 The units on one heat pump run one direction. It comes from the rooms
 with a unit on it that is read and planned, needing heat only when one
 of its units on that heat pump may heat it: on a conflict, rooms needing
-heat that have radiators step aside; then the most rooms win; with no
+heat that have radiators able to heat them step aside, whatever their
+strategy, and their radiators heat them; then the most rooms win; with no
 need either way, the direction stays. A room left needing the other way
 is warned of, and one left needing heat has its radiators heat it as
 they would a room with no unit, whatever its strategy gave them.
@@ -156,8 +157,10 @@ How a tie and a room just past its band count is the settings' `pump`:
 | `switch: :heat` (default) | as soon as it is past its band | heat wins |
 | `switch: :hysteresis, margin: 0.5` | only once `margin` °C past its band | the direction it runs stays |
 
-With hysteresis, a pump that is off goes either way with no margin, and
-a room inside the margin is still warned of.
+With hysteresis, a pump whose compressor is stopped (`running` false,
+or else none of its units on) goes either way with no margin, whatever
+mode its systems are left in, and a room inside the margin is still
+warned of.
 
 ### Short cycles
 
@@ -169,8 +172,8 @@ settings of `PumpSettings`, each off until set:
 | Setting | What it does |
 | :------ | :----------- |
 | `mild: 8.0, mild_deadband: 1.0` | with `room.outside` at or above `mild` and the pump heating: stopped, it starts only once a room on it is `mild_deadband` °C under its unit's target, and then every unit whose room is under its target starts with it, one run for all; running, a unit whose room reaches its target goes off, and the last one stops the pump |
-| `min_on: 15, min_off: 10, urgent: 1.0` | a pump that started (stopped) less than that many minutes ago (its `switched_ago`) has none of its units switched off (on), said in a warning; a unit is switched off all the same when its energy is excluded now, when it runs another direction, or when its room is `urgent` °C past its band the warm way, and on when its room is `urgent` °C past it the cold way |
-| `mild_lead: 8.0, lead_gap: 1.0` | per room: with `room.outside` at or above `mild_lead`, a room less than `lead_gap` °C under its band heats with its radiators, its units a comfort gap behind, whatever the strategy (`cheapest` included); the energy rules' effects still apply after. Such a unit calls the pump only at its backup target |
+| `min_on: 15, min_off: 10, urgent: 1.0` | a pump that started less than `min_on` minutes ago (its `switched_ago`) has its units that are on left as they are, power and setpoint, unless a unit's energy is excluded now, it runs another direction, or its room is `urgent` °C past its band the warm way; one stopped less than `min_off` ago has none of its units switched on or given a new setpoint, its rooms needing heat heated by their radiators meanwhile, until a room `urgent` °C past its band the cold way starts it, which ends the rest for all. A unit held off or on is said in a warning |
+| `mild_lead: 8.0, lead_gap: 1.0` | per room: with `room.outside` at or above `mild_lead`, a room less than `lead_gap` °C under its band heats with its radiators, whatever the strategy (`cheapest` included), its units that heat a comfort gap behind and those the strategy rests resting; the energy rules' effects still apply after. Such a unit calls the pump only at its backup target |
 
 An unknown outside temperature, room temperature or `switched_ago`
 leaves the plan as it would be without the setting.

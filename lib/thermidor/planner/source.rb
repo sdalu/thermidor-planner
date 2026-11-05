@@ -18,24 +18,43 @@ module Thermidor
             # Nothing held.
             FREE = Object.new.freeze
 
-            # name: the heat pump's, as its units' source gives it.
-            attr_reader :name, :direction, :unserved, :overridden
+            # name: the heat pump's, as its units' source gives it;
+            # stepped: the rooms needing heat that stepped aside on a
+            # conflict, for their radiators to heat.
+            attr_reader :name, :direction, :unserved, :overridden, :stepped
 
+            # state: what the caller knows of it (PumpState): a direction
+            # held, whether its compressor runs.
             def initialize(name, rooms, current,
-                           settings = StrategySettings.new, held: FREE)
+                           settings = StrategySettings.new,
+                           state: PumpState.new)
                 @name     = name
                 @settings = settings
                 @pump     = settings.pump
                 @current  = current
+                @running  = running?(state, rooms)
                 voters = voters(rooms)
-                @direction  = held.equal?(FREE) ? chosen(voters) : held
+                @direction  = directed(state.held, voters)
                 @unserved   = left_out(*votes(voters))
+                @stepped    = stepped_aside(voters)
                 @overridden = held_against(rooms)
             end
 
             def to_s = @name.to_s
 
             private
+
+            def directed(held, voters)
+                held.equal?(FREE) ? chosen(voters) : held
+            end
+
+            # Its compressor running, as the caller says, else one of its
+            # units on.
+            def running?(state, rooms)
+                return state.running unless state.running.nil?
+                rooms.flat_map { it.aircons + it.held.grep(Aircon) }
+                     .any? { it.source == @name && it.on }
+            end
 
             # The rooms with a unit of their own on this source: one held
             # off by hand does not vote, nor does one unread (nil mode):
@@ -55,10 +74,26 @@ module Thermidor
                     needs?(room, :heat, margin) && heats?(room, :aircon)
                 end
                 cools = rooms.select { needs?(it, :cool, margin) }
-                if heats.any? && cools.any?
-                    heats = heats.reject { heats?(it, :radiator) }
-                end
+                heats = heats.reject { radiators?(it) } if
+                    heats.any? && cools.any?
                 [heats, cools]
+            end
+
+            # The rooms needing heat that step aside on a conflict.
+            def stepped_aside(rooms)
+                heats = rooms.select do |room|
+                    needs?(room, :heat, false) && heats?(room, :aircon)
+                end
+                cools = rooms.select { needs?(it, :cool, false) }
+                return [] if heats.empty? || cools.empty?
+                heats.select { radiators?(it) }
+            end
+
+            # Whether room has radiators able to heat it to its band, the
+            # strategy aside: they heat it when it steps aside.
+            def radiators?(room)
+                heat = room.band&.heat or return false
+                room.radiators.any? { Roles.able?(it, room.excluded, heat) }
             end
 
             # Whether the strategy has one of room's `kind` of devices heat:
@@ -94,8 +129,9 @@ module Thermidor
                 heats.size >= cools.size ? :heat : :cool
             end
 
-            # Whether hysteresis holds the pump to a direction it runs.
-            def holding? = @pump.hysteresis? && !@current.nil?
+            # Whether hysteresis holds the pump to a direction it runs: a
+            # compressor stopped, its system's mode kept, holds none.
+            def holding? = @pump.hysteresis? && !@current.nil? && @running
 
             # Whether room needs direction: past its band, by the margin
             # when asked and the pump runs the other way.

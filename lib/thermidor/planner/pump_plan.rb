@@ -24,10 +24,8 @@ module Thermidor
             # Its direction from the rooms with a unit of its own in the
             # plan: one switched off by hand cannot use it.
             def source(name, rooms)
-                state = @pumps[name]
-                held = state ? state.held : Source::FREE
                 Source.new(name, rooms, current(rooms, name), @settings,
-                           held:)
+                           state: @pumps[name] || PumpState.new)
             end
 
             # The room's units, held or not; on source only when given.
@@ -54,12 +52,19 @@ module Thermidor
 
             def pump(source, rooms)
                 masters(rooms, source.name).each { mode(source, it) }
+                units_of(source, rooms)
+                unserved(source)
+                held_against(source)
+            end
+
+            # Its units, planned as one, and the zones it leaves to their
+            # radiators.
+            def units_of(source, rooms)
                 cycle = cycle(source, rooms)
                 targets = cycle.targets
                 rooms.each { aircons(it, source, targets) }
                 @warnings.concat(cycle.warnings)
-                unserved(source)
-                held_against(source)
+                cut(source, cycle.rested + source.stepped.map(&:zone))
             end
 
             # Its units planned as one (PumpCycle), from each one's target.
@@ -80,6 +85,12 @@ module Thermidor
                 direction = source.direction
                 room.aircons.select { it.source == source.name }
                     .reject { direction.nil? && Plan::RUNNING.include?(it.mode) }
+            end
+
+            # The zones the pump leaves to their radiators (#uncut): those
+            # stepping aside, those whose units it holds while it rests.
+            def cut(source, zones)
+                zones.each { @cut[it] << source.name }
             end
 
             # The rooms needing what the pump does not give, said; one
@@ -133,17 +144,6 @@ module Thermidor
                 return {} if direction.nil? || room.need == opposite(direction)
                 return Strategy.heat(room, @settings) if direction == :heat
                 room.aircons.to_h { [it.label, room.band&.cool] }
-            end
-
-            # The room as its radiators are planned: without the units of
-            # a heat pump that leaves it needing heat, so the radiators
-            # heat it as they would a room with no unit.
-            def uncut(room)
-                cut = @cut[room.zone]
-                return room if cut.empty?
-                room.with(aircons: room.aircons.reject do |unit|
-                    cut.include?(unit.source)
-                end)
             end
         end
     end

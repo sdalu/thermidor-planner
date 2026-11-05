@@ -5,6 +5,8 @@ require "test_helper"
 # How a heat pump changes direction (PumpSettings): heat on a tie by
 # default; with hysteresis, a room asks for the other direction only
 # once it is a margin past its band, and a tie keeps the pump as it is.
+# The rooms' units are on, the pump running (HuntFixesTest has it
+# stopped).
 class PumpSettingsTest < Minitest::Test
     include Thermidor::Planner
 
@@ -39,7 +41,7 @@ class PumpSettingsTest < Minitest::Test
     def test_no_margin_for_the_direction_it_runs
         result = plan(in_mode(:heat), pump: HYSTERESIS)
         assert_empty mode_changes(result)
-        assert_includes changes(result, "unit:1"), [:power, false, true]
+        assert_includes changes(result, "unit:1"), [:setpoint, 24.0, 20.0]
     end
 
     # Nor from off: a stopped pump is free to go either way.
@@ -82,7 +84,7 @@ class PumpSettingsTest < Minitest::Test
     def cooling(temperature)
         unit = Aircon.new(ref: "1", label: "unit:1", caps: AIRCON_CAPS,
                           system: "h:1", source: "pump", master: true,
-                          temperature: nil, on: false, mode: :cool,
+                          temperature: nil, on: true, mode: :cool,
                           setpoint: 24.0, range: 15.0..30.0, step: 0.5)
         Room.new(zone: "r", band: BAND, strategy: :quick, radiators: [],
                  aircons: [unit], measured: temperature)

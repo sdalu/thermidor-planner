@@ -28,6 +28,21 @@ module Thermidor
                 caps.heat && !excluded.include?(caps.energy)
             end
 
+            # Whether a device takes part in heating to `heat`: read, it may
+            # heat, and as low as that (a unit by its heating range,
+            # whatever mode it is in now).
+            def self.able?(device, excluded, heat)
+                return false if device.respond_to?(:mode) && device.mode.nil?
+                return false unless heats?(device, excluded)
+                range = if device.respond_to?(:range_in)
+                            device.range_in(:heat)
+                        else
+                            device.range
+                        end
+                least = range&.begin
+                !(least && heat < least)
+            end
+
             # excluded: energies the devices may not heat on now; effects:
             # what the rules do besides (Effects).
             def initialize(room, heat, excluded = [], effects = Effects.none)
@@ -50,7 +65,8 @@ module Thermidor
             def offsets(strategy, settings)
                 energies = @parts.to_h { |_, one| [one.label, one.caps.energy] }
                 planned = strategy_offsets(strategy, settings)
-                planned = led(settings.comfort) if lead?(settings.pump)
+                planned = led(planned, settings.comfort) if
+                    lead?(settings.pump)
                 found = @effects.apply(planned, energies, settings.comfort)
                 found.merge(following(found))
             end
@@ -77,32 +93,20 @@ module Thermidor
                 now > @room.band.heat - pump.lead_gap
             end
 
-            # The radiators lead, the units a gap behind.
-            def led(gap)
+            # The radiators lead, the units the strategy has heat a gap
+            # behind; one it rests stays so.
+            def led(planned, gap)
                 @parts.to_h do |role, device|
-                    [device.label, role == :radiator ? 0.0 : -gap]
+                    next [device.label, 0.0] if role == :radiator
+                    [device.label, planned[device.label] && -gap]
                 end
             end
 
             def by = @parts.to_h { |_, device| [device.label, yield(device)] }
 
-            def part?(device, heat)
-                Roles.heats?(device, @excluded) && !too_warm?(device, heat)
-            end
+            def part?(device, heat) = Roles.able?(device, @excluded, heat)
 
             def unread?(device) = device.respond_to?(:mode) && device.mode.nil?
-
-            # Whether a device cannot heat as low as heat.
-            def too_warm?(device, heat)
-                least = heating_range(device)&.begin
-                least && heat < least
-            end
-
-            # A unit's heating range, whatever mode it is in now.
-            def heating_range(device)
-                return device.range_in(:heat) if device.respond_to?(:range_in)
-                device.range
-            end
 
             # The gentlest lead, together when equally gentle.
             def comfort(gap)

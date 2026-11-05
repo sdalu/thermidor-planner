@@ -84,8 +84,9 @@ the caller knows which share one.
 
 Units on one outdoor unit cannot heat and cool at once. The direction
 is voted by the rooms that can use it: a room needing heat that has
-radiators steps aside on a conflict, since it has another way to be
-heated and the other side has none; then the most rooms win. With no
+radiators able to heat it steps aside on a conflict, since it has
+another way to be heated and the other side has none, and its radiators
+then heat it whatever its strategy gave them; then the most rooms win. With no
 need either way, the direction it has stays. A unit unread, or switched
 off by hand, does not vote: it cannot be known to want either way, nor
 can it use what it would vote for. The losers are told, never silently
@@ -112,10 +113,19 @@ nothing for them, and rooms calling one after another can make them
 worse. So the measures are the pump's (`PumpCycle`): a stopped pump
 starts only once a room on it is a margin under its target, its units
 then on together for one run; a running one stops only once no room is
-under, its units off together; and it runs, or rests, a least time,
-none of its units switched off, or on, meanwhile. The radiators taking
-the small loads of mild weather stay a room's choice, which the pump
-sees as a unit calling only at its backup target.
+under, its units off together; and it runs, or rests, a least time.
+Running, its units on are left as they are, setpoints included: a
+setpoint lowered out of a call stops the compressor as surely as a unit
+switched off. Resting, none is switched on or retargeted, and a room
+needing heat meanwhile is its radiators'. One room urgent past its band
+ends the rest, and then for every unit, as one run. The radiators
+taking the small loads of mild weather stay a room's choice, backed up
+by the units its strategy has heat and no others, which the pump sees
+as a unit calling only at its backup target.
+
+A pump's direction is held by hysteresis only while its compressor
+runs: a system's mode outlives its units, Airzone keeping heat with
+every unit off, so a mode alone is no sign the pump is busy.
 
 Each is a setting, off until set, since what counts as mild and how
 long a run must last are the house's, measured on its own pump. The

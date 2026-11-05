@@ -65,9 +65,21 @@ module Thermidor
                 @cut      = Hash.new { |hash, zone| hash[zone] = [] }
             end
 
+            # The room as its radiators are planned: without the units of
+            # a heat pump that leaves it needing heat, so the radiators
+            # heat it as they would a room with no unit.
+            def uncut(room)
+                cut = @cut[room.zone]
+                return room if cut.empty?
+                room.with(aircons: room.aircons.reject do |unit|
+                    cut.include?(unit.source)
+                end)
+            end
+
             # A room needing heat that none of its devices heat, said with
-            # why; one whose devices are all unread or held is said
-            # elsewhere.
+            # why. One whose devices are all unread or held is not: an
+            # unread one is said as such, and one held is the caller's (a
+            # zone handed to its devices' own drivers, say).
             def unheated(room)
                 return unless room.need == :heat
                 read = (room.radiators + room.aircons).select(&:mode)
