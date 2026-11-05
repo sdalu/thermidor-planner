@@ -57,12 +57,13 @@ module Thermidor
                 @entries.any? { |_, unit, _| unit.on }
             end
 
-            # Mild weather, heating, every room's temperature known.
+            # Mild weather, heating, every room's temperature known: mild
+            # by every room on the pump that gives an outside temperature,
+            # one at least giving one.
             def mild?
                 return false unless direction == :heat
-                outside = @entries.filter_map { |room, _, _| room.outside }
-                                  .first
-                @settings.mild?(outside) &&
+                outsides = @entries.filter_map { |room, _, _| room.outside }
+                outsides.any? && outsides.all? { @settings.mild?(it) } &&
                     @entries.all? { |room, _, _| room.temperature }
             end
 

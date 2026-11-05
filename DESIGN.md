@@ -140,7 +140,10 @@ long a run must last are the house's, measured on its own pump. The
 planner keeps no clock and no weather: the caller says the outside
 temperature, whether the compressor runs and since when (a power meter
 on its circuit knows better than the units' own state), and an unknown
-value leaves the plan as it would be. The least times give way where
+value leaves the plan as it would be. The pump's weather is mild only
+when every room on it that says an outside temperature says a mild one:
+rooms may read different sensors, and taking whichever came first would
+make the gap depend on listing order. The least times give way where
 holding would do harm: an energy excluded now (a tariff's peak), a unit
 running another direction, or a room already a margin past its band.
 What is held is said, so a plan that changes nothing still shows why.
