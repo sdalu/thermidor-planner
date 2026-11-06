@@ -7,7 +7,7 @@ gemspec
 # The bands and strategies planned from: the sibling gem, at the release
 # tag ClimatControl pins (or the commit, between releases).
 gem "thermidor-schedule", github: "sdalu/thermidor-schedule",
-                          tag: "v0.2.0"
+                          tag: "v0.3.0"
 
 group :development, :test do
     gem "minitest", "~> 5.25"
