@@ -16,3 +16,17 @@ RADIATOR_CAPS = Caps.new(heat: true, cool: false, quiet: true,
 # A unit on an electric heat pump: heats and cools, by forced air.
 AIRCON_CAPS = Caps.new(heat: true, cool: true, quiet: false,
                        energy: "electricity", propagation: %w[forced])
+
+# For the tests reading a plan's actions: the plan of rooms with the
+# default settings, and a device's changes in it.
+module PlanActions
+    private
+
+    def plan(*rooms) = Thermidor::Planner::Plan.new(rooms).run
+
+    # [[setting, from, to], ...] for device's actions.
+    def changes(result, device)
+        result.actions.select { it.device == device }
+              .map { [it.setting, it.from, it.to] }
+    end
+end

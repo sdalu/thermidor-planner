@@ -9,6 +9,7 @@ require "test_helper"
 # stopped).
 class PumpSettingsTest < Minitest::Test
     include Thermidor::Planner
+    include PlanActions
 
     BAND = Thermidor::Schedule::Setpoint.new(heat: 20, cool: 26)
     HYSTERESIS = StrategySettings.new(
@@ -67,11 +68,6 @@ class PumpSettingsTest < Minitest::Test
 
     def mode_changes(result)
         result.actions.select { it.setting == :mode }
-              .map { [it.setting, it.from, it.to] }
-    end
-
-    def changes(result, device)
-        result.actions.select { it.device == device }
               .map { [it.setting, it.from, it.to] }
     end
 

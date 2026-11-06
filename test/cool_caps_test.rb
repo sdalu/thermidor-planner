@@ -6,6 +6,7 @@ require "test_helper"
 # cool, and its room does not vote cool through it.
 class CoolCapsTest < Minitest::Test
     include Thermidor::Planner
+    include PlanActions
 
     BAND = Thermidor::Schedule::Setpoint.new(heat: 20, cool: 24)
 
@@ -46,13 +47,6 @@ class CoolCapsTest < Minitest::Test
     end
 
     private
-
-    def plan(*rooms) = Plan.new(rooms).run
-
-    def changes(result, device)
-        result.actions.select { it.device == device }
-              .map { [it.setting, it.from, it.to] }
-    end
 
     def room(zone, temperature, unit)
         Room.new(zone:, band: BAND, strategy: :quick, radiators: [],

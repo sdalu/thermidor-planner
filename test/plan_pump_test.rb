@@ -7,6 +7,7 @@ require "test_helper"
 # the mode it will run in.
 class PlanPumpTest < Minitest::Test
     include Thermidor::Planner
+    include PlanActions
 
     Setpoint = Thermidor::Schedule::Setpoint
     BAND = Setpoint.new(heat: 20, cool: 24)
@@ -101,8 +102,6 @@ class PlanPumpTest < Minitest::Test
 
     private
 
-    def plan(*rooms) = Plan.new(rooms).run
-
     def two_pumps
         on_b = %w[living office guest].each_with_index.map do |_, i|
             unit(i + 1, host: "b", source: "pump-b")
@@ -110,11 +109,6 @@ class PlanPumpTest < Minitest::Test
         plan(room("living", 18.0,
                   [unit(1, host: "a", source: "pump-a"), on_b[0]]),
              room("office", 26.0, [on_b[1]]), room("guest", 26.0, [on_b[2]]))
-    end
-
-    def changes(result, device)
-        result.actions.select { it.device == device }
-              .map { [it.setting, it.from, it.to] }
     end
 
     def room(zone, temperature, aircons)

@@ -6,6 +6,7 @@ require "test_helper"
 # the planner on rooms given by hand, as PlanTest's.
 class PlanFitTest < Minitest::Test
     include Thermidor::Planner
+    include PlanActions
 
     Setpoint = Thermidor::Schedule::Setpoint
     BAND = Setpoint.new(heat: 20, cool: 24)
@@ -33,13 +34,6 @@ class PlanFitTest < Minitest::Test
     end
 
     private
-
-    def plan(*rooms) = Plan.new(rooms).run
-
-    def changes(result, device)
-        result.actions.select { it.device == device }
-              .map { [it.setting, it.from, it.to] }
-    end
 
     def room(zone, temperature, aircon: nil, radiator: nil,
              strategy: :quick)

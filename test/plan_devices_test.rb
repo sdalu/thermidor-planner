@@ -7,6 +7,7 @@ require "test_helper"
 # by the units on it.
 class PlanDevicesTest < Minitest::Test
     include Thermidor::Planner
+    include PlanActions
 
     BAND = Thermidor::Schedule::Setpoint.new(heat: 20, cool: 26)
     LOUD = RADIATOR_CAPS.with(quiet: false)
@@ -52,8 +53,6 @@ class PlanDevicesTest < Minitest::Test
 
     private
 
-    def plan(*rooms) = Plan.new(rooms).run
-
     def room(strategy, radiators: [], aircons: [])
         Room.new(zone: "living", band: BAND, strategy:, radiators:,
                  aircons:, measured: 18.0)
@@ -62,11 +61,6 @@ class PlanDevicesTest < Minitest::Test
     def targets(result)
         result.actions.select { it.setting == :target }
               .to_h { [it.device, it.to] }
-    end
-
-    def changes(result, device)
-        result.actions.select { it.device == device }
-              .map { [it.setting, it.from, it.to] }
     end
 
     def valve(name, caps)

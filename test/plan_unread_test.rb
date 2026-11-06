@@ -9,6 +9,7 @@ require "test_helper"
 # planned as if it were not there.
 class PlanUnreadTest < Minitest::Test
     include Thermidor::Planner
+    include PlanActions
 
     Setpoint = Thermidor::Schedule::Setpoint
     BAND = Setpoint.new(heat: 20, cool: 24)
@@ -39,13 +40,6 @@ class PlanUnreadTest < Minitest::Test
     end
 
     private
-
-    def plan(*rooms) = Plan.new(rooms).run
-
-    def changes(result, device)
-        result.actions.select { it.device == device }
-              .map { [it.setting, it.from, it.to] }
-    end
 
     def radiator(mode)
         Radiator.new(ref: "VA1", label: "valve:VA1", caps: RADIATOR_CAPS,
