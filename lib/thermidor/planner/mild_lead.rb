@@ -24,8 +24,9 @@ module Thermidor
             # radiators leading when the lead holds; else as it is.
             def apply(planned) = holds? ? led(planned) : planned
 
-            # The lead said, for why: "mild lead (10.2 °C ≥ 10.0)", "mild
-            # lead kept (9.7 °C ≥ 9.5)" within the deadband; nil when it
+            # The lead said, for why, in the words of the settings as the
+            # house names them: "pump backup (10.2 °C ≥ 10.0)", "pump
+            # backup kept (9.7 °C ≥ 9.5)" within the deadband; nil when it
             # does not hold.
             def note
                 return unless holds?
@@ -33,7 +34,7 @@ module Thermidor
                 bound = @pump.mild_lead
                 kept = outside < bound
                 bound = @pump.lead_bound(leading: true) if kept
-                format("mild lead%<kept>s (%<outside>.1f °C ≥ %<bound>.1f)",
+                format("pump backup%<kept>s (%<outside>.1f °C ≥ %<bound>.1f)",
                        kept: (" kept" if kept), outside:, bound:)
             end
 

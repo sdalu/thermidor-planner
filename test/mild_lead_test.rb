@@ -60,11 +60,11 @@ class MildLeadTest < Minitest::Test
 
     # Each write the lead made says so, and how far mild the weather is.
     def test_why_names_the_mild_lead
-        assert_equal ["cheapest, mild lead (12.0 °C ≥ 8.0), +20.0..+26.0, " \
+        assert_equal ["cheapest, pump backup (12.0 °C ≥ 8.0), +20.0..+26.0, " \
                       "at 19.5"] * 2,
                      whys(cheap)
         kept = cheap.with(outside: 7.7, led: %w[valve:a])
-        assert_equal ["cheapest, mild lead kept (7.7 °C ≥ 7.5), " \
+        assert_equal ["cheapest, pump backup kept (7.7 °C ≥ 7.5), " \
                       "+20.0..+26.0, at 19.5"] * 2,
                      whys(kept)
     end

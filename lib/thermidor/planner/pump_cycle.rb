@@ -96,7 +96,7 @@ module Thermidor
             def gap(room, unit, target, calls)
                 return [room, unit, target] if
                     calls && under?(room, target, 0.0)
-                note(room, unit, "mild gap") if target
+                note(room, unit, "pump wait") if target
                 [room, unit, nil]
             end
 

@@ -145,7 +145,7 @@ its radiator meanwhile, as if it had no unit.
 ## Said in why
 
 An action the heat pump's measures changed says which in its `why`,
-after the strategy: `mild gap` for a unit off that the strategy would
+after the strategy: `pump wait` for a unit off that the strategy would
 have heat, `urgent, run ended` for a unit switched off within its
 least run, its room too warm, and `rest ended: a urgent` for every unit
 heating once zone `a` ended the rest. A unit held (`KEEP`) gets no

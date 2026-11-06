@@ -50,7 +50,7 @@ class PumpWaitTest < Minitest::Test
     # Solar undoes the mild lead: the lead is not said.
     def test_a_mild_lead_undone_by_an_effect_is_not_said
         result = plan(room(19.6), pump(mild_lead: 10.0))
-        assert(result.actions.none? { it.why.include?("mild lead") })
+        assert(result.actions.none? { it.why.include?("pump backup") })
     end
 
     private

@@ -42,7 +42,7 @@ class ShortCyclingTest < Minitest::Test
         rooms = [room("a", 19.5, on: true), room("b", 20.1, on: true)]
         result = plan(rooms, settings)
         assert_equal({ "unit:b" => [:power, true, false] }, power(result))
-        assert_equal ["quick, mild gap, +20.0..+26.0, at 20.1"],
+        assert_equal ["quick, pump wait, +20.0..+26.0, at 20.1"],
                      result.actions.map(&:why)
         warm = [room("a", 20.0, on: true), room("b", 20.1, on: true)]
         assert_equal({ "unit:a" => [:power, true, false],

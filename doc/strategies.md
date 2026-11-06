@@ -174,9 +174,9 @@ with a unit among those that led, the lead starts at `mild_lead`.
 Where the lead changed what the strategy and the effects ask (a
 preference that gives the lead back to the unit undoes it), each
 action's `why`
-says it after the strategy: `"cheapest, mild lead (10.2 °C ≥ 10.0),
-+18.0..+28.0, at 20.7"`, and `mild lead kept (9.7 °C ≥ 9.5)` within the
-deadband. A strategy leading with the radiators anyway (comfort, say)
+says it after the strategy, as the unit backing the radiators up:
+`"cheapest, pump backup (10.2 °C ≥ 10.0), +18.0..+28.0, at 20.7"`, and
+`pump backup kept (9.7 °C ≥ 9.5)` within the deadband. A strategy leading with the radiators anyway (comfort, say)
 is not changed by it, and nothing is said.
 
 ```ruby
