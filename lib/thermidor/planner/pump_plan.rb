@@ -64,6 +64,7 @@ module Thermidor
                 cycle = cycle(source, rooms)
                 targets = cycle.targets
                 @actions.noted(cycle.notes)
+                @waits.merge!(cycle.waits) { |_, one, other| [one, other].max }
                 rooms.each { aircons(it, source, targets) }
                 @warnings.concat(cycle.warnings)
                 cut(source, cycle.rested + source.stepped.map(&:zone))

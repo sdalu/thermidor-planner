@@ -12,6 +12,7 @@ module Thermidor
             include PumpPlan
             include PumpNotices
             include HeldDevices
+            include PumpWait
 
             # Modes a system runs in without its heat pump: what a caller
             # may set aside (aside:) when a system was put in one by hand.
@@ -71,10 +72,13 @@ module Thermidor
                 room.with(aircons: kept, held: room.held + aside)
             end
 
-            # cut: { zone => the heat pumps leaving it needing heat }.
+            # cut: { zone => the heat pumps leaving it needing heat };
+            # waits: { zone => its units' highest target } on a heat pump
+            # waiting in its mild gap (PumpCycle#waits).
             def start
                 @actions  = Actions.new(@settings)
                 @warnings = []
+                @waits    = {}
                 @cut      = Hash.new { |hash, zone| hash[zone] = [] }
             end
 

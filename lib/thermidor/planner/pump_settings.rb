@@ -22,11 +22,16 @@ module Thermidor
         #   than lead_gap °C under its band heats with its radiators, its
         #   units a comfort gap behind, whatever the strategy; a room
         #   whose radiators led last (Room#led) keeps them leading until
-        #   the outside falls lead_deadband °C below it.
+        #   the outside falls lead_deadband °C below it;
+        # - backup_margin (°C): while a pump heating waits in its mild gap,
+        #   stopped with no room calling, a radiator its room's strategy
+        #   steps back behind the unit heats no higher than that under
+        #   the pump's restart point (the unit's target less
+        #   mild_deadband), so the pump starts first (PumpWait).
         PUMP_DEFAULTS = { switch: :heat, margin: 0.5, mild: nil,
                           mild_deadband: 1.0, min_on: nil, min_off: nil,
                           urgent: 1.0, mild_lead: nil, lead_gap: 1.0,
-                          lead_deadband: 0.5 }.freeze
+                          lead_deadband: 0.5, backup_margin: 0.5 }.freeze
 
         PumpSettings = Data.define(*PUMP_DEFAULTS.keys) do
             def initialize(**given)

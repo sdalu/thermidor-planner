@@ -38,10 +38,11 @@ module Thermidor
                          found.with(celsius: wanted))
             end
 
-            # Each radiator's own target (Strategy.heat), its least for
-            # none.
+            # Each radiator's own target (Strategy.heat), kept under its
+            # room's heat pump's restart point while the pump waits
+            # (PumpWait), its least for none.
             def radiators(room)
-                targets = Strategy.heat(room, @settings)
+                targets = waiting(room, Strategy.heat(room, @settings))
                 room.radiators.each do |device|
                     radiator(room, device, targets[device.label])
                 end

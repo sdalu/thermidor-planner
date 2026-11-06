@@ -38,13 +38,16 @@ module Thermidor
                 @outsides  = outsides
                 @warnings  = []
                 @notes     = {}
+                @waits     = {}
             end
 
             # warnings: what it said; rested: the zones needing heat whose
             # units it holds while the pump rests, for their radiators;
             # notes: { [zone, unit label] => [what overrode its room's
-            # strategy, for why], ... }, after #targets.
-            attr_reader :warnings, :notes
+            # strategy, for why], ... }, after #targets; waits: { zone =>
+            # its units' highest target } while the pump waits in its mild
+            # gap, stopped with no room calling, after #targets.
+            attr_reader :warnings, :notes, :waits
 
             def rested = @rested || []
 
@@ -83,14 +86,28 @@ module Thermidor
             # the others carrying the run.
             def gapped
                 margin = running? ? 0.0 : @settings.mild_deadband
-                calls = @entries.any? do |room, _, target|
-                    under?(room, target, margin)
-                end
-                @entries.map do |room, unit, target|
-                    next [room, unit, target] if
-                        calls && under?(room, target, 0.0)
-                    note(room, unit, "mild gap") if target
-                    [room, unit, nil]
+                calls = calls?(margin)
+                wait unless calls || running?
+                @entries.map { gap(*it, calls) }
+            end
+
+            # A unit on while the pump calls and its room is under its
+            # target; else off, said when the strategy had it heat.
+            def gap(room, unit, target, calls)
+                return [room, unit, target] if
+                    calls && under?(room, target, 0.0)
+                note(room, unit, "mild gap") if target
+                [room, unit, nil]
+            end
+
+            def calls?(margin)
+                @entries.any? { |room, _, target| under?(room, target, margin) }
+            end
+
+            def wait
+                @entries.each do |room, _, target|
+                    next unless target
+                    @waits[room.zone] = [@waits[room.zone], target].compact.max
                 end
             end
 

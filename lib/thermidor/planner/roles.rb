@@ -67,21 +67,19 @@ module Thermidor
             # the strategy's, the radiators leading in mild weather
             # (MildLead), as the rules' effects change them.
             def offsets(strategy, settings)
-                energies = @parts.to_h { |_, one| [one.label, one.caps.energy] }
-                planned = lead_offsets(strategy, settings)
-                found = @effects.apply(planned, energies, settings.comfort)
+                planned = strategy_offsets(strategy, settings)
+                found = effected(mild_lead(settings).apply(planned), settings)
                 found.merge(following(found))
             end
 
-            # The strategy's offsets, the radiators leading in mild weather.
-            def lead_offsets(strategy, settings)
-                mild_lead(settings).apply(strategy_offsets(strategy, settings))
-            end
-
-            # The mild lead said, for why, when it changes what the strategy
-            # asks (MildLead#note); nil otherwise.
+            # The mild lead said, for why, when it changes what the
+            # strategy and the effects ask (MildLead#note); nil otherwise.
             def lead_note(strategy, settings)
-                mild_lead(settings).note(strategy_offsets(strategy, settings))
+                planned = strategy_offsets(strategy, settings)
+                lead = mild_lead(settings)
+                return if effected(lead.apply(planned), settings) ==
+                          effected(planned, settings)
+                lead.note
             end
 
             # strategy: a rule, an alias of one (StrategySettings), or
@@ -99,6 +97,11 @@ module Thermidor
             private
 
             def mild_lead(settings) = MildLead.new(@room, @parts, settings)
+
+            def effected(planned, settings)
+                energies = @parts.to_h { |_, one| [one.label, one.caps.energy] }
+                @effects.apply(planned, energies, settings.comfort)
+            end
 
             def by = @parts.to_h { |_, device| [device.label, yield(device)] }
 

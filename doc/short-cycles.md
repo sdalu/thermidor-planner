@@ -21,9 +21,11 @@ until set:
 | `mild_lead`     | nil     | °C outside from which radiators lead ([strategies](strategies.md#mild-lead)) |
 | `lead_gap`      | 1.0     | how far under its band a room still lets its radiators lead                  |
 | `lead_deadband` | 0.5     | how far under `mild_lead` radiators leading already keep the lead            |
+| `backup_margin` | 0.5     | how far under its restart point a backup radiator sits ([waiting](#waiting)) |
 
 `PumpSettings` refuses a negative value, and a nil `mild_deadband`,
-`urgent`, `lead_gap` or `lead_deadband`, with `ArgumentError`. An unknown outside
+`urgent`, `lead_gap` or `lead_deadband`, with `ArgumentError`
+(`backup_margin` nil is off). An unknown outside
 temperature, room temperature or `switched_ago` leaves the plan as it
 would be without the setting.
 
@@ -42,6 +44,19 @@ room whose unit is planned has its temperature known.
 
 Whether it runs is `PumpState#running`, or, unknown, whether one of its
 units is on.
+
+### Waiting
+
+Stopped with no room calling, the heat pump waits for its restart
+point, `mild_deadband` under its unit's target. A radiator heating up
+to there would hold the room above it, and the pump would never start:
+a radiator the strategy or the effects step back behind the unit (a
+solar surplus preferring electricity, say) heats no higher than
+`backup_margin` under the restart point, a safety net. The room falls
+to the restart point, the pump starts and runs one long cycle, and the
+radiator is back at its comfort gap. A radiator leading with the unit
+or ahead of it is left; nil `backup_margin` leaves the strategy's
+target. Its `why` says `backup 18.5 while the pump waits`.
 
 ```ruby
 band = S::Setpoint.new(heat: 20, cool: 26)

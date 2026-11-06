@@ -173,6 +173,15 @@ with the radiators anyway is planned the same either way. A plan
 written by the lead, or by the pump's measures, says so in its `why`,
 since the strategy's name alone would claim it.
 
+A pump waiting in its mild gap starts only once a room falls to its
+restart point, so a radiator stepped back to the comfort gap, at or
+above that point, holds the room there and the pump never starts: the
+radiator heats while a cheaper or preferred pump waits. Such a radiator
+is put under the restart point instead, a safety net: the room sags to
+it, and the pump runs its long cycle. Holding the room higher would
+need the restart moved, shortening the cycles the gap is there to
+lengthen.
+
 ## Not heating is the least target
 
 A radiator not to heat goes to its least target rather than off: a
