@@ -45,15 +45,15 @@ module Thermidor
             # units it holds while the pump rests, for their radiators;
             # notes: { [zone, unit label] => [what overrode its room's
             # strategy, for why], ... }, after #targets; waits: { zone =>
-            # its units' highest target } while the pump waits in its mild
-            # gap, stopped with no room calling, after #targets.
+            # its units' highest target } while the pump waits, mild and
+            # stopped with no room calling, after #targets.
             attr_reader :warnings, :notes, :waits
 
             def rested = @rested || []
 
             # { [zone, unit label] => target, nil or KEEP }.
             def targets
-                found = mild? ? gapped : @entries
+                found = wait? ? gapped : @entries
                 held(found).to_h do |room, unit, target|
                     [[room.zone, unit.label], target]
                 end
@@ -71,21 +71,21 @@ module Thermidor
             # Mild weather, heating, every room's temperature known: mild
             # by every room on the pump that gives an outside temperature,
             # one at least giving one.
-            def mild?
+            def wait?
                 return false unless direction == :heat
                 outsides = @outsides ||
                            @entries.filter_map { |room, _, _| room.outside }
-                outsides.any? && outsides.all? { @settings.mild?(it) } &&
+                outsides.any? && outsides.all? { @settings.wait?(it) } &&
                     @entries.all? { |room, _, _| room.temperature }
             end
 
             # Running, until no room is under its unit's target, then every
-            # unit off together; stopped, until a room is mild_deadband
+            # unit off together; stopped, until a room is wait
             # under it, then every unit whose room is under its target on
             # together. A unit whose room is not under its target is off,
             # the others carrying the run.
             def gapped
-                margin = running? ? 0.0 : @settings.mild_deadband
+                margin = running? ? 0.0 : @settings.wait
                 calls = calls?(margin)
                 wait unless calls || running?
                 @entries.map { gap(*it, calls) }

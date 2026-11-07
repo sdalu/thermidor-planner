@@ -155,10 +155,10 @@ P::Strategy.heat(comfort.with(effects: effects.(raises: { "electricity" => 1.5 }
 # => { "valve:VA1" => 20.0, "unit:1" => 21.5 }
 ```
 
-## Mild lead
+## Pump backup
 
-`settings.pump.mild_lead` (°C, nil: off) and `lead_gap` (1.0 °C): with
-`room.outside` at or above `mild_lead`, a room less than `lead_gap`
+`settings.pump.backup_above` (°C, nil: off) and `backup_within` (1.0 °C): with
+`room.outside` at or above `backup_above`, a room less than `backup_within`
 under its band's heat side heats with its radiators, whatever the
 strategy, `cheapest` included. Its units that heat go a comfort gap
 behind, and those the strategy rests stay resting; the effects still
@@ -166,10 +166,10 @@ apply after. It holds only in a room where radiators and units both
 take part, and with its temperature known.
 
 A room whose radiators alone led it last (`room.led`) keeps them
-leading until the outside falls `lead_deadband` (0.5 °C) under
-`mild_lead`, so an outside hovering at `mild_lead` does not swap the
+leading until the outside falls `backup_kept` (0.5 °C) under
+`backup_above`, so an outside hovering at `backup_above` does not swap the
 lead, and rewrite every device, at each plan. Not knowing what led, or
-with a unit among those that led, the lead starts at `mild_lead`.
+with a unit among those that led, the lead starts at `backup_above`.
 
 Where the lead changed what the strategy and the effects ask (a
 preference that gives the lead back to the unit undoes it), each
@@ -180,7 +180,7 @@ says it after the strategy, as the unit backing the radiators up:
 is not changed by it, and nothing is said.
 
 ```ruby
-lead = P::StrategySettings.new(pump: P::PumpSettings.new(mild_lead: 8.0))
+lead = P::StrategySettings.new(pump: P::PumpSettings.new(backup_above: 8.0))
 mild = room.with(outside: 10.0, measured: 19.6)
 
 P::Strategy.heat(mild, lead)
@@ -201,7 +201,7 @@ P::Strategy.heat(cool.with(led: ["valve:VA1"]), lead)
 # => { "valve:VA1" => 20.0, "unit:1" => 19.5 }
 ```
 
-At 7.7 °C, under `mild_lead`, the lead starts no more; the valve that
+At 7.7 °C, under `backup_above`, the lead starts no more; the valve that
 led last keeps it down to 7.5 °C.
 
 ## Devices without caps

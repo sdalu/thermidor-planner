@@ -163,17 +163,17 @@ holding would do harm: an energy excluded now (a tariff's peak), a unit
 running another direction, or a room already a margin past its band.
 What is held is said, so a plan that changes nothing still shows why.
 
-The mild lead swaps every device in a room, radiators and units, so an
-outside hovering at `mild_lead` would rewrite them all at each plan. A
+The pump backup swaps every device in a room, radiators and units, so an
+outside hovering at `backup_above` would rewrite them all at each plan. A
 room whose radiators alone led last keeps them leading until the
-outside is `lead_deadband` under it. What led last is `room.led`, the
+outside is `backup_kept` under it. What led last is `room.led`, the
 input the cost margin reads already: radiators alone at the band and
 the units a gap behind is what the lead leaves, and a strategy leading
 with the radiators anyway is planned the same either way. A plan
 written by the lead, or by the pump's measures, says so in its `why`,
 since the strategy's name alone would claim it.
 
-A pump waiting in its mild gap starts only once a room falls to its
+A pump waiting in mild weather starts only once a room falls to its
 restart point, so a radiator stepped back to the comfort gap, at or
 above that point, holds the room there and the pump never starts: the
 radiator heats while a cheaper or preferred pump waits. Such a radiator

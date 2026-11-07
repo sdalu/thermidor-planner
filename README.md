@@ -89,9 +89,9 @@ it, and the unit's setpoint is written for the mode it will run in.
 | :------------------------------------- | :------------------------------------------------------------------- |
 | [doc/README.md](doc/README.md)         | a plan's run, its terms, what the caller keeps                       |
 | [Rooms and devices](doc/rooms.md)      | what `Plan` takes and gives, caps, targets, translation, `PumpState` |
-| [Strategies](doc/strategies.md)        | which device heats, costs and the cost margin, effects, mild lead    |
+| [Strategies](doc/strategies.md)        | which device heats, costs and the cost margin, effects, pump backup  |
 | [Heat pumps](doc/heat-pumps.md)        | a pump's direction, `switch` and `margin`, systems set aside         |
-| [Short cycles](doc/short-cycles.md)    | the mild gap, the least times, urgent rooms                          |
+| [Short cycles](doc/short-cycles.md)    | the pump wait, the least times, urgent rooms                         |
 | [Held devices and drifts](doc/held.md) | devices switched by hand, and settings changed outside the plan      |
 | [Warnings](doc/warnings.md)            | each `Notice` kind and its sentence                                  |
 

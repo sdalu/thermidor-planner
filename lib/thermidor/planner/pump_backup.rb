@@ -2,15 +2,15 @@
 
 module Thermidor
     module Planner
-        # The radiators leading in mild weather (PumpSettings mild_lead),
-        # for Roles: with the outside mild, a room less than lead_gap
+        # The radiators leading in mild weather (PumpSettings backup_above),
+        # for Roles: with the outside mild, a room less than backup_within
         # under its band, radiators and units both taking part, heats
         # with its radiators, the units the strategy has heat a comfort
         # gap behind. A room whose radiators alone led last (Room#led)
-        # keeps them leading until the outside falls lead_deadband under
-        # mild_lead, so an outside hovering there does not swap the lead
+        # keeps them leading until the outside falls backup_kept under
+        # backup_above, so an outside hovering there does not swap the lead
         # at every plan.
-        class MildLead
+        class PumpBackup
             # parts: [[role, device], ...], the room's devices taking part
             # (Roles).
             def initialize(room, parts, settings)
@@ -31,21 +31,21 @@ module Thermidor
             def note
                 return unless holds?
                 outside = @room.outside
-                bound = @pump.mild_lead
+                bound = @pump.backup_above
                 kept = outside < bound
-                bound = @pump.lead_bound(leading: true) if kept
+                bound = @pump.backup_bound(leading: true) if kept
                 format("pump backup%<kept>s (%<outside>.1f °C ≥ %<bound>.1f)",
                        kept: (" kept" if kept), outside:, bound:)
             end
 
-            # Mild, the room less than lead_gap under its band, radiators
+            # Mild, the room less than backup_within under its band, radiators
             # and units both taking part.
             def holds?
-                return false unless @pump.lead?(@room.outside,
-                                                leading: leading?)
+                return false unless @pump.backup?(@room.outside,
+                                                  leading: leading?)
                 return false unless @parts.map(&:first).uniq.size == 2
                 now = @room.temperature or return false
-                now > @room.band.heat - @pump.lead_gap
+                now > @room.band.heat - @pump.backup_within
             end
 
             private

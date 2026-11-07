@@ -106,8 +106,8 @@ temperature.
 `why` reads `"comfort, +20.0..+26.0, at 18.5 (devices)"`, `(devices)`
 when the temperature is the devices' average, `, +1.2 offset` after it
 when the translation gave one. What overrode the strategy for that
-device comes after the strategy: the [mild lead](strategies.md#mild-lead),
-and a heat pump's [mild gap or urgent room](short-cycles.md#said-in-why); a system's mode reads `"source "` and
+device comes after the strategy: the [pump backup](strategies.md#pump-backup),
+and a heat pump's [pump wait or urgent room](short-cycles.md#said-in-why); a system's mode reads `"source "` and
 its heat pump's name.
 
 `warnings` are `Notice`s ([warnings](warnings.md)), the translation's

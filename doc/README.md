@@ -61,9 +61,9 @@ device reads is an action.
 | Page                            | What it covers                                                       |
 | :------------------------------ | :------------------------------------------------------------------- |
 | [Rooms and devices](rooms.md)   | what `Plan` takes and gives, caps, targets, translation, `PumpState` |
-| [Strategies](strategies.md)     | which device heats, costs and the cost margin, effects, mild lead    |
+| [Strategies](strategies.md)     | which device heats, costs and the cost margin, effects, pump backup  |
 | [Heat pumps](heat-pumps.md)     | a pump's direction, `switch` and `margin`, systems set aside         |
-| [Short cycles](short-cycles.md) | `PumpCycle`: the mild gap, the least times, urgent rooms             |
+| [Short cycles](short-cycles.md) | `PumpCycle`: the pump wait, the least times, urgent rooms            |
 | [Held devices](held.md)         | devices switched by hand, and drifts from what was set               |
 | [Warnings](warnings.md)         | each `Notice` kind and its sentence                                  |
 

@@ -6,7 +6,7 @@ require "test_helper"
 # one compressor runs while any unit on it calls. A wider gap in mild
 # weather, its units on and off together; and a least time running and
 # stopped. Each off until set; the radiators leading in mild weather are
-# MildLeadTest's.
+# PumpBackupTest's.
 class ShortCyclingTest < Minitest::Test
     include Thermidor::Planner
 
@@ -22,7 +22,7 @@ class ShortCyclingTest < Minitest::Test
 
     # Mild, the pump stopped: no room a degree under, nothing starts.
     def test_a_stopped_pump_waits_for_a_room_a_degree_under
-        result = plan([room("a", 19.5), room("b", 19.5)], pump(mild: 8.0))
+        result = plan([room("a", 19.5), room("b", 19.5)], pump(wait_above: 8.0))
         assert_empty power(result)
     end
 
@@ -32,13 +32,13 @@ class ShortCyclingTest < Minitest::Test
         rooms = [room("a", 18.9), room("b", 19.5), room("c", 20.2)]
         assert_equal({ "unit:a" => [:power, false, true],
                        "unit:b" => [:power, false, true] },
-                     power(plan(rooms, pump(mild: 8.0))))
+                     power(plan(rooms, pump(wait_above: 8.0))))
     end
 
     # Running: a room reaching its target lets its unit go, and the last
     # one stops the pump.
     def test_a_running_pump_stops_when_no_room_is_under
-        settings = pump(mild: 8.0)
+        settings = pump(wait_above: 8.0)
         rooms = [room("a", 19.5, on: true), room("b", 20.1, on: true)]
         result = plan(rooms, settings)
         assert_equal({ "unit:b" => [:power, true, false] }, power(result))
@@ -104,7 +104,7 @@ class ShortCyclingTest < Minitest::Test
 
     def test_a_negative_setting_is_refused
         assert_raises(ArgumentError) { PumpSettings.new(min_on: -1) }
-        assert_raises(ArgumentError) { PumpSettings.new(mild_deadband: -1) }
+        assert_raises(ArgumentError) { PumpSettings.new(wait: -1) }
     end
 
     private

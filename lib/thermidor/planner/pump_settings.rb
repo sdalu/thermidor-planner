@@ -11,27 +11,27 @@ module Thermidor
         # Against short cycles, judged per heat pump (PumpCycle), its one
         # compressor running while any unit calls; each off while nil:
         # - mild (°C): with the outside at or above it, a pump heating is
-        #   started only once a room on it is mild_deadband °C under its
+        #   started only once a room on it is wait °C under its
         #   unit's target, its units on together, and stopped once no
         #   room is under it, its units off together;
         # - min_on, min_off (minutes): a pump started (stopped) less than
         #   that ago has none of its units switched off (on), unless a
         #   unit's energy is excluded now, it runs another direction, or
         #   its room is urgent °C past its band the other way;
-        # - mild_lead (°C): with the outside at or above it, a room less
-        #   than lead_gap °C under its band heats with its radiators, its
+        # - backup_above (°C): with the outside at or above it, a room less
+        #   than backup_within °C under its band heats with its radiators, its
         #   units a comfort gap behind, whatever the strategy; a room
         #   whose radiators led last (Room#led) keeps them leading until
-        #   the outside falls lead_deadband °C below it;
-        # - backup_margin (°C): while a pump heating waits in its mild gap,
+        #   the outside falls backup_kept °C below it;
+        # - backup_under (°C): while a pump heating waits, mild and
         #   stopped with no room calling, a radiator its room's strategy
         #   steps back behind the unit heats no higher than that under
-        #   the pump's restart point (the unit's target less
-        #   mild_deadband), so the pump starts first (PumpWait).
-        PUMP_DEFAULTS = { switch: :heat, margin: 0.5, mild: nil,
-                          mild_deadband: 1.0, min_on: nil, min_off: nil,
-                          urgent: 1.0, mild_lead: nil, lead_gap: 1.0,
-                          lead_deadband: 0.5, backup_margin: 0.5 }.freeze
+        #   the pump's restart point (the unit's target less wait °C), so
+        #   the pump starts first (PumpWait).
+        PUMP_DEFAULTS = { switch: :heat, margin: 0.5, wait_above: nil,
+                          wait: 1.0, min_on: nil, min_off: nil,
+                          urgent: 1.0, backup_above: nil, backup_within: 1.0,
+                          backup_kept: 0.5, backup_under: 0.5 }.freeze
 
         PumpSettings = Data.define(*PUMP_DEFAULTS.keys) do
             def initialize(**given)
@@ -47,20 +47,22 @@ module Thermidor
             def hysteresis? = switch == :hysteresis
 
             # Whether outside (°C, nil unknown) is mild for the gap.
-            def mild?(outside) = !mild.nil? && !outside.nil? && outside >= mild
+            def wait?(outside)
+                !wait_above.nil? && !outside.nil? && outside >= wait_above
+            end
 
             # Whether outside is mild for the radiators to lead: from
-            # mild_lead, and lead_deadband below it for radiators leading
+            # backup_above, and backup_kept below it for radiators leading
             # already (leading).
-            def lead?(outside, leading: false)
-                bound = lead_bound(leading:) or return false
+            def backup?(outside, leading: false)
+                bound = backup_bound(leading:) or return false
                 !outside.nil? && outside >= bound
             end
 
             # The outside °C from which the radiators lead, nil when off.
-            def lead_bound(leading: false)
-                return if mild_lead.nil?
-                leading ? mild_lead - lead_deadband : mild_lead
+            def backup_bound(leading: false)
+                return if backup_above.nil?
+                leading ? backup_above - backup_kept : backup_above
             end
         end
 
@@ -68,8 +70,8 @@ module Thermidor
             SWITCHES = %i[heat hysteresis].freeze
 
             # Settings with no off: nil is refused.
-            REQUIRED = %i[margin mild_deadband urgent lead_gap
-                          lead_deadband].freeze
+            REQUIRED = %i[margin wait urgent backup_within
+                          backup_kept].freeze
 
             def self.given(values)
                 missing = REQUIRED.select { values[it].nil? }

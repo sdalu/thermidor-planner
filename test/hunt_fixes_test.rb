@@ -5,7 +5,7 @@ require "test_helper"
 # What the hunt of 2026-11-05 found, each on its trigger: stepping aside
 # by radiators able to heat; no margin from a stopped compressor; the
 # least times holding setpoints too; an urgent start ending the rest;
-# settings with no off refusing nil; mild lead backing up only units
+# settings with no off refusing nil; pump backup backing up only units
 # that heat; radiators heating while the pump rests.
 class HuntFixesTest < Minitest::Test
     include Thermidor::Planner
@@ -71,19 +71,19 @@ class HuntFixesTest < Minitest::Test
     end
 
     def test_settings_with_no_off_refuse_nil
-        %i[margin mild_deadband urgent lead_gap].each do |key|
+        %i[margin wait urgent backup_within].each do |key|
             assert_raises(ArgumentError, key.to_s) do
                 PumpSettings.new(key => nil)
             end
         end
     end
 
-    # quiet rests the loud unit; mild lead leads with the radiator and
+    # quiet rests the loud unit; pump backup leads with the radiator and
     # leaves the unit resting, not backing up.
-    def test_mild_lead_backs_up_only_units_that_heat
+    def test_pump_backup_backs_up_only_units_that_heat
         quiet = room("a", 19.5, strategy: :quiet, valve: true)
                 .with(outside: 12.0)
-        lead = pump(mild_lead: 8.0)
+        lead = pump(backup_above: 8.0)
         assert_equal({ "valve:a" => 20.0, "unit:a" => nil },
                      Strategy.heat(quiet, lead))
     end

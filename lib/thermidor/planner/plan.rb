@@ -74,7 +74,7 @@ module Thermidor
 
             # cut: { zone => the heat pumps leaving it needing heat };
             # waits: { zone => its units' highest target } on a heat pump
-            # waiting in its mild gap (PumpCycle#waits).
+            # waiting, mild and stopped (PumpCycle#waits).
             def start
                 @actions  = Actions.new(@settings)
                 @warnings = []

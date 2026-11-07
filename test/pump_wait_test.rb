@@ -2,9 +2,9 @@
 
 require "test_helper"
 
-# A heat pump waiting in its mild gap (PumpWait): stopped, it restarts
-# only once its room is mild_deadband under the unit's target, so a
-# radiator stepped back behind the unit sits backup_margin under that
+# A heat pump waiting in its pump wait (PumpWait): stopped, it restarts
+# only once its room is wait under the unit's target, so a
+# radiator stepped back behind the unit sits backup_under under that
 # point, a safety net, the pump starting first.
 class PumpWaitTest < Minitest::Test
     include Thermidor::Planner
@@ -36,7 +36,7 @@ class PumpWaitTest < Minitest::Test
 
     def test_off_the_strategy_s_target_stands
         assert_equal [["valve:a", 19.0]],
-                     targets(plan(room(19.6), pump(backup_margin: nil)))
+                     targets(plan(room(19.6), pump(backup_under: nil)))
     end
 
     # The radiators leading in mild weather, the unit their backup: the
@@ -44,12 +44,12 @@ class PumpWaitTest < Minitest::Test
     def test_a_radiator_leading_is_left
         led = room(19.6).with(effects: Effects.none)
         assert_equal [["valve:a", 20.0]],
-                     targets(plan(led, pump(mild_lead: 10.0)))
+                     targets(plan(led, pump(backup_above: 10.0)))
     end
 
-    # Solar undoes the mild lead: the lead is not said.
-    def test_a_mild_lead_undone_by_an_effect_is_not_said
-        result = plan(room(19.6), pump(mild_lead: 10.0))
+    # Solar undoes the pump backup: the lead is not said.
+    def test_a_pump_backup_undone_by_an_effect_is_not_said
+        result = plan(room(19.6), pump(backup_above: 10.0))
         assert(result.actions.none? { it.why.include?("pump backup") })
     end
 
@@ -57,7 +57,7 @@ class PumpWaitTest < Minitest::Test
 
     def pump(**given)
         StrategySettings.new(comfort: 1.0,
-                             pump: PumpSettings.new(mild: 6.0, **given))
+                             pump: PumpSettings.new(wait_above: 6.0, **given))
     end
 
     def plan(room, settings, pumps = STOPPED)

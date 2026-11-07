@@ -4,7 +4,7 @@ require "test_helper"
 
 # A pump's weather is mild only when every room on it that gives an
 # outside temperature gives a mild one, whichever is listed first.
-class PumpMildTest < Minitest::Test
+class WaitWeatherTest < Minitest::Test
     include Thermidor::Planner
 
     BAND = Thermidor::Schedule::Setpoint.new(heat: 20, cool: 26)
@@ -34,7 +34,7 @@ class PumpMildTest < Minitest::Test
                           aircons: [unit(1).with(mode: nil, on: nil)])
         read = Room.new(zone: "r", band: BAND, strategy: :quick,
                         radiators: [], aircons: [unit(0)], measured: 19.5)
-        settings = StrategySettings.new(pump: PumpSettings.new(mild: 8.0))
+        settings = StrategySettings.new(pump: PumpSettings.new(wait_above: 8.0))
         pumps = { "pump" => PumpState.new(running: false) }
         result = Plan.new([unread, read], settings:, pumps:).run
         assert(result.actions.none? { it.setting == :power })
@@ -52,7 +52,7 @@ class PumpMildTest < Minitest::Test
                      radiators: [], aircons: [unit(i)], measured: 19.5,
                      outside:)
         end
-        settings = StrategySettings.new(pump: PumpSettings.new(mild: 8.0))
+        settings = StrategySettings.new(pump: PumpSettings.new(wait_above: 8.0))
         pumps = { "pump" => PumpState.new(running: false) }
         Plan.new(rooms, settings:, pumps:).run
     end

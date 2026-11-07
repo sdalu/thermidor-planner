@@ -135,12 +135,12 @@ module Thermidor
             end
 
             # What overrode the room's strategy, for an action's why: the
-            # mild lead when it changed the lead (Roles#lead_note); none
+            # pump backup when it changed the lead (Roles#backup_note); none
             # without a band.
             def notes(room, settings = StrategySettings.new)
                 heat = room.band&.heat or return []
                 name = room.strategy or return []
-                [roles(room, heat).lead_note(name.to_sym, settings)]
+                [roles(room, heat).backup_note(name.to_sym, settings)]
                     .compact
             end
 

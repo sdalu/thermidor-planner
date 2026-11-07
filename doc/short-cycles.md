@@ -11,33 +11,33 @@ target, nil for off, or `PumpCycle::KEEP`, the unit left as it is
 Its settings are the `PumpSettings` in the settings' `pump`, each off
 until set:
 
-| Setting         | Default | What it is                                                                   |
-| :-------------- | :------ | :--------------------------------------------------------------------------- |
-| `mild`          | nil     | °C outside from which the [mild gap](#the-mild-gap) holds                    |
-| `mild_deadband` | 1.0     | how far under its target a room starts a stopped heat pump                   |
-| `min_on`        | nil     | minutes a started heat pump runs at least                                    |
-| `min_off`       | nil     | minutes a stopped heat pump rests at least                                   |
-| `urgent`        | 1.0     | °C past its band that ends a least time                                      |
-| `mild_lead`     | nil     | °C outside from which radiators lead ([strategies](strategies.md#mild-lead)) |
-| `lead_gap`      | 1.0     | how far under its band a room still lets its radiators lead                  |
-| `lead_deadband` | 0.5     | how far under `mild_lead` radiators leading already keep the lead            |
-| `backup_margin` | 0.5     | how far under its restart point a backup radiator sits ([waiting](#waiting)) |
+| Setting         | Default | What it is                                                                     |
+| :-------------- | :------ | :----------------------------------------------------------------------------- |
+| `wait_above`    | nil     | °C outside from which the [pump wait](#the-pump-wait) holds                    |
+| `wait`          | 1.0     | how far under its target a room starts a stopped heat pump                     |
+| `min_on`        | nil     | minutes a started heat pump runs at least                                      |
+| `min_off`       | nil     | minutes a stopped heat pump rests at least                                     |
+| `urgent`        | 1.0     | °C past its band that ends a least time                                        |
+| `backup_above`  | nil     | °C outside from which radiators lead ([strategies](strategies.md#pump-backup)) |
+| `backup_within` | 1.0     | how far under its band a room still lets its radiators lead                    |
+| `backup_kept`   | 0.5     | how far under `backup_above` radiators leading already keep the lead           |
+| `backup_under`  | 0.5     | how far under its restart point a backup radiator sits ([waiting](#waiting))   |
 
-`PumpSettings` refuses a negative value, and a nil `mild_deadband`,
-`urgent`, `lead_gap` or `lead_deadband`, with `ArgumentError`
-(`backup_margin` nil is off). An unknown outside
+`PumpSettings` refuses a negative value, and a nil `wait`,
+`urgent`, `backup_within` or `backup_kept`, with `ArgumentError`
+(`backup_under` nil is off). An unknown outside
 temperature, room temperature or `switched_ago` leaves the plan as it
 would be without the setting.
 
-## The mild gap
+## The pump wait
 
-The mild gap holds when the heat pump heats, `room.outside` is at or
-above `mild` in every room on it that gives one (its units planned or
+The pump wait holds when the heat pump heats, `room.outside` is at or
+above `wait_above` in every room on it that gives one (its units planned or
 not: one unread still says the weather), at least one does, and every
 room whose unit is planned has its temperature known.
 
 - Stopped, the heat pump starts only once a room on it is more than
-  `mild_deadband` under its unit's target; then every unit whose room
+  `wait` under its unit's target; then every unit whose room
   is under its target starts with it, one run for all.
 - Running, a unit whose room reaches its target goes off, and the last
   one stops the heat pump.
@@ -48,14 +48,14 @@ units is on.
 ### Waiting
 
 Stopped with no room calling, the heat pump waits for its restart
-point, `mild_deadband` under its unit's target. A radiator heating up
+point, `wait` under its unit's target. A radiator heating up
 to there would hold the room above it, and the pump would never start:
 a radiator the strategy or the effects step back behind the unit (a
 solar surplus preferring electricity, say) heats no higher than
-`backup_margin` under the restart point, a safety net. The room falls
+`backup_under` under the restart point, a safety net. The room falls
 to the restart point, the pump starts and runs one long cycle, and the
 radiator is back at its comfort gap. A radiator leading with the unit
-or ahead of it is left; nil `backup_margin` leaves the strategy's
+or ahead of it is left; nil `backup_under` leaves the strategy's
 target. Its `why` says `backup 18.5 while the pump waits`.
 
 ```ruby
@@ -69,7 +69,7 @@ room = lambda do |zone, temperature, on: false|
     P::Room.new(zone:, band:, strategy: :comfort, radiators: [],
                 aircons: [unit], outside: 12.0)
 end
-mild = P::StrategySettings.new(pump: P::PumpSettings.new(mild: 8.0))
+mild = P::StrategySettings.new(pump: P::PumpSettings.new(wait_above: 8.0))
 power = ->(rooms) { P::Plan.new(rooms, settings: mild).run.actions
                                 .select { it.setting == :power }
                                 .map { [it.device, it.to] } }

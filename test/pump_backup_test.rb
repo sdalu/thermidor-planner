@@ -2,14 +2,14 @@
 
 require "test_helper"
 
-# The radiators leading in mild weather (PumpSettings mild_lead), per
+# The radiators leading in mild weather (PumpSettings backup_above), per
 # room: a room needing little heat heats with its radiators, its units a
 # comfort gap behind, whatever the strategy.
-class MildLeadTest < Minitest::Test
+class PumpBackupTest < Minitest::Test
     include Thermidor::Planner
 
     BAND = Thermidor::Schedule::Setpoint.new(heat: 20, cool: 26)
-    LEAD = StrategySettings.new(pump: PumpSettings.new(mild_lead: 8.0))
+    LEAD = StrategySettings.new(pump: PumpSettings.new(backup_above: 8.0))
     UNIT_LEADS = { "valve:a" => nil, "unit:a" => 20.0 }.freeze
 
     # cheapest leads with the unit; mild and a room less than a degree
@@ -38,15 +38,15 @@ class MildLeadTest < Minitest::Test
         assert_equal UNIT_LEADS, lead_at(7.4, %w[valve:a])
     end
 
-    def test_under_mild_lead_no_other_lead_is_kept
+    def test_under_backup_above_no_other_lead_is_kept
         [nil, %w[unit:a], %w[valve:a unit:a]].each do |led|
             assert_equal UNIT_LEADS, lead_at(7.7, led), led.inspect
         end
     end
 
-    def test_a_deadband_of_none_swaps_at_mild_lead
+    def test_a_deadband_of_none_swaps_at_backup_above
         sharp = StrategySettings.new(
-            pump: PumpSettings.new(mild_lead: 8.0, lead_deadband: 0.0)
+            pump: PumpSettings.new(backup_above: 8.0, backup_kept: 0.0)
         )
         assert_equal({ "valve:a" => nil, "unit:a" => 20.0 },
                      Strategy.heat(cheap.with(outside: 7.9,
@@ -54,12 +54,12 @@ class MildLeadTest < Minitest::Test
     end
 
     def test_a_nil_or_negative_deadband_is_refused
-        assert_raises(ArgumentError) { PumpSettings.new(lead_deadband: nil) }
-        assert_raises(ArgumentError) { PumpSettings.new(lead_deadband: -1) }
+        assert_raises(ArgumentError) { PumpSettings.new(backup_kept: nil) }
+        assert_raises(ArgumentError) { PumpSettings.new(backup_kept: -1) }
     end
 
     # Each write the lead made says so, and how far mild the weather is.
-    def test_why_names_the_mild_lead
+    def test_why_names_the_pump_backup
         assert_equal ["cheapest, pump backup (12.0 °C ≥ 8.0), +20.0..+26.0, " \
                       "at 19.5"] * 2,
                      whys(cheap)

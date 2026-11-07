@@ -65,18 +65,18 @@ module Thermidor
             # { device label => offset from the band's heat side, or nil }
             # for the devices taking part and those following their class:
             # the strategy's, the radiators leading in mild weather
-            # (MildLead), as the rules' effects change them.
+            # (PumpBackup), as the rules' effects change them.
             def offsets(strategy, settings)
                 planned = strategy_offsets(strategy, settings)
-                found = effected(mild_lead(settings).apply(planned), settings)
+                found = effected(pump_backup(settings).apply(planned), settings)
                 found.merge(following(found))
             end
 
-            # The mild lead said, for why, when it changes what the
-            # strategy and the effects ask (MildLead#note); nil otherwise.
-            def lead_note(strategy, settings)
+            # The pump backup said, for why, when it changes what the
+            # strategy and the effects ask (PumpBackup#note); nil otherwise.
+            def backup_note(strategy, settings)
                 planned = strategy_offsets(strategy, settings)
-                lead = mild_lead(settings)
+                lead = pump_backup(settings)
                 return if effected(lead.apply(planned), settings) ==
                           effected(planned, settings)
                 lead.note
@@ -96,7 +96,7 @@ module Thermidor
 
             private
 
-            def mild_lead(settings) = MildLead.new(@room, @parts, settings)
+            def pump_backup(settings) = PumpBackup.new(@room, @parts, settings)
 
             def effected(planned, settings)
                 energies = @parts.to_h { |_, one| [one.label, one.caps.energy] }
