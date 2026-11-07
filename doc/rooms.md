@@ -74,7 +74,7 @@ best of its class ([strategies](strategies.md#devices-without-caps)).
 | Field      | What it is (default)                                                                |
 | :--------- | :---------------------------------------------------------------------------------- |
 | `band`     | the `Setpoint` to hold; nil, nothing to hold: no device gets a target               |
-| `strategy` | a Symbol ([strategies](strategies.md))                                              |
+| `strategy` | a Symbol ([strategies](strategies.md)); nil is refused with `ArgumentError`         |
 | `measured` | its °C from a reference of its own (nil)                                            |
 | `location` | where that reference is, for a translation (nil)                                    |
 | `excluded` | the energies its devices may not heat on now (`[]`)                                 |

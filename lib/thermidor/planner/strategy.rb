@@ -139,8 +139,7 @@ module Thermidor
             # without a band.
             def notes(room, settings = StrategySettings.new)
                 heat = room.band&.heat or return []
-                name = room.strategy or return []
-                [roles(room, heat).backup_note(name.to_sym, settings)]
+                [roles(room, heat).backup_note(room.strategy.to_sym, settings)]
                     .compact
             end
 

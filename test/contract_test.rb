@@ -3,7 +3,7 @@
 require "test_helper"
 
 # What the planner takes beyond the README's example: a heat pump named
-# by any value, a room the schedule gave no band.
+# by any value, a room the schedule gave no band, one with no strategy.
 class ContractTest < Minitest::Test
     include Thermidor::Planner
 
@@ -26,6 +26,16 @@ class ContractTest < Minitest::Test
         assert_nil room.need
         changes = result.actions.map { [it.setting, it.from, it.to] }
         assert_equal [[:power, true, false]], changes
+    end
+
+    # A strategy is a Symbol: none is refused when the room is made,
+    # not found later as a crash in the plan.
+    def test_a_room_without_a_strategy_is_refused
+        error = assert_raises(ArgumentError) do
+            Room.new(zone: "office", band: BAND, strategy: nil,
+                     radiators: [], aircons: [unit("pump")])
+        end
+        assert_equal "office: no strategy", error.message
     end
 
     private

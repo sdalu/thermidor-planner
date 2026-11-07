@@ -66,7 +66,13 @@ module Thermidor
         Room = Data.define(:zone, :band, :strategy, :radiators, :aircons,
                            :excluded, :measured, :location, :held,
                            :effects, :costs, :outside, :led) do
-            def initialize(**) = super(**ROOM_DEFAULTS, **)
+            # A strategy is a Symbol (or a name StrategySettings may
+            # alias): none is refused.
+            def initialize(**given)
+                raise ArgumentError, "#{given[:zone]}: no strategy" if
+                    given[:strategy].nil?
+                super(**ROOM_DEFAULTS, **given)
+            end
 
             # Every device, held or not.
             def devices = radiators + aircons + held

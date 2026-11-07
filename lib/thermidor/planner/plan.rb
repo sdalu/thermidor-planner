@@ -129,7 +129,7 @@ module Thermidor
             # planned as Strategy::FALLBACK, said.
             def unknown_strategy(room)
                 name = room.strategy
-                return if name.nil? || @settings.rule(name)
+                return if @settings.rule(name)
                 notice("#{room.zone}: strategy #{name} unknown, planned as " \
                        "#{Strategy::FALLBACK}",
                        kind: :unknown_strategy, zone: room.zone)
