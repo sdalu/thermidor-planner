@@ -55,11 +55,16 @@ module Thermidor
                     unheated(room)
                     against_band(room)
                 end
-                Result.new(actions: @actions.to_a,
-                           warnings: @warnings + @translation.notes)
+                result
             end
 
             private
+
+            def result
+                Result.new(actions: @actions.to_a,
+                           warnings: @warnings + @translation.notes,
+                           waited: @waited)
+            end
 
             # The room with its units (read) of a system set aside held,
             # as switched outside the planner: not planned, ranked nor
@@ -79,6 +84,7 @@ module Thermidor
                 @actions  = Actions.new(@settings)
                 @warnings = []
                 @waits    = {}
+                @waited   = {}
                 @cut      = Hash.new { |hash, zone| hash[zone] = [] }
             end
 

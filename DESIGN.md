@@ -182,6 +182,15 @@ it, and the pump runs its long cycle. Holding the room higher would
 need the restart moved, shortening the cycles the gap is there to
 lengthen.
 
+The pump wait changes how the units run, off until a room is a margin
+under or on at their setpoints, so an outside hovering at `wait_above`
+would switch them off and on at each plan: the stops and starts it is
+there to spare. Once waiting, a pump waits until the outside is
+`wait_kept` under it. Unlike the backup, nothing the caller sends says
+whether the pump waited, so the plan says it (`Result#waited`) and the
+caller gives it back (`PumpState#waited`), the planner still keeping
+no memory of its own.
+
 ## Not heating is the least target
 
 A radiator not to heat goes to its least target rather than off: a

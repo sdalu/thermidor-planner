@@ -10,7 +10,8 @@ module Thermidor
         #
         # Against short cycles, judged per heat pump (PumpCycle), its one
         # compressor running while any unit calls; each off while nil:
-        # - mild (°C): with the outside at or above it, a pump heating is
+        # - wait_above (°C): with the outside at or above it (once
+        #   waiting, until wait_kept °C below it), a pump heating is
         #   started only once a room on it is wait °C under its
         #   unit's target, its units on together, and stopped once no
         #   room is under it, its units off together;
@@ -31,7 +32,8 @@ module Thermidor
         PUMP_DEFAULTS = { switch: :heat, margin: 0.5, wait_above: nil,
                           wait: 1.0, min_on: nil, min_off: nil,
                           urgent: 1.0, backup_above: nil, backup_within: 1.0,
-                          backup_kept: 0.5, backup_under: 0.5 }.freeze
+                          backup_kept: 0.5, backup_under: 0.5,
+                          wait_kept: 0.5 }.freeze
 
         PumpSettings = Data.define(*PUMP_DEFAULTS.keys) do
             def initialize(**given)
@@ -46,9 +48,12 @@ module Thermidor
 
             def hysteresis? = switch == :hysteresis
 
-            # Whether outside (°C, nil unknown) is mild for the gap.
-            def wait?(outside)
-                !wait_above.nil? && !outside.nil? && outside >= wait_above
+            # Whether outside (°C, nil unknown) is mild for the pump to
+            # wait: from wait_above, and wait_kept below it for a pump
+            # waiting already (waited).
+            def wait?(outside, waited: false)
+                return false if wait_above.nil? || outside.nil?
+                outside >= (waited ? wait_above - wait_kept : wait_above)
             end
 
             # Whether outside is mild for the radiators to lead: from
@@ -70,8 +75,8 @@ module Thermidor
             SWITCHES = %i[heat hysteresis].freeze
 
             # Settings with no off: nil is refused.
-            REQUIRED = %i[margin wait urgent backup_within
-                          backup_kept].freeze
+            REQUIRED = %i[margin wait urgent backup_within backup_kept
+                          wait_kept].freeze
 
             def self.given(values)
                 missing = REQUIRED.select { values[it].nil? }

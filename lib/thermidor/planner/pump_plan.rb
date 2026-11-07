@@ -63,11 +63,18 @@ module Thermidor
             def units_of(source, rooms)
                 cycle = cycle(source, rooms)
                 targets = cycle.targets
-                @actions.noted(cycle.notes)
-                @waits.merge!(cycle.waits) { |_, one, other| [one, other].max }
+                heard(source, cycle)
                 rooms.each { aircons(it, source, targets) }
                 @warnings.concat(cycle.warnings)
                 cut(source, cycle.rested + source.stepped.map(&:zone))
+            end
+
+            # What the cycle said: its notes for why, the rooms it waits
+            # for, whether the pump waits.
+            def heard(source, cycle)
+                @actions.noted(cycle.notes)
+                @waits.merge!(cycle.waits) { |_, one, other| [one, other].max }
+                @waited[source.name] = cycle.waiting?
             end
 
             # Its units planned as one (PumpCycle), from each one's target.

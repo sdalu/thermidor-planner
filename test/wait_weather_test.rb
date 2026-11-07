@@ -40,20 +40,42 @@ class WaitWeatherTest < Minitest::Test
         assert(result.actions.none? { it.setting == :power })
     end
 
-    private
-
-    def powers(outsides)
-        plan(outsides).actions.select { it.setting == :power }.map(&:to)
+    # Under wait_above (8.0), a pump that waited last waits on down to
+    # 7.5 (wait_kept); one that did not, or not known to, starts.
+    def test_a_waiting_pump_waits_on_within_wait_kept
+        assert_empty powers([7.7], waited: true)
+        assert_equal [true], powers([7.7], waited: false)
+        assert_equal [true], powers([7.7])
+        assert_equal [true], powers([7.4], waited: true)
     end
 
-    def plan(outsides)
+    # What the next plan is to be told: whether each pump waits.
+    def test_the_result_says_whether_the_pump_waits
+        assert_equal({ "pump" => true }, plan([12.0]).waited)
+        assert_equal({ "pump" => true }, plan([7.7], waited: true).waited)
+        assert_equal({ "pump" => false }, plan([5.0]).waited)
+    end
+
+    def test_a_nil_or_negative_wait_kept_is_refused
+        assert_raises(ArgumentError) { PumpSettings.new(wait_kept: nil) }
+        assert_raises(ArgumentError) { PumpSettings.new(wait_kept: -1) }
+    end
+
+    private
+
+    def powers(outsides, waited: nil)
+        plan(outsides, waited:).actions.select { it.setting == :power }
+                               .map(&:to)
+    end
+
+    def plan(outsides, waited: nil)
         rooms = outsides.each_with_index.map do |outside, i|
             Room.new(zone: "r#{i}", band: BAND, strategy: :quick,
                      radiators: [], aircons: [unit(i)], measured: 19.5,
                      outside:)
         end
         settings = StrategySettings.new(pump: PumpSettings.new(wait_above: 8.0))
-        pumps = { "pump" => PumpState.new(running: false) }
+        pumps = { "pump" => PumpState.new(running: false, waited:) }
         Plan.new(rooms, settings:, pumps:).run
     end
 

@@ -92,7 +92,9 @@ temperature.
 
 ## What it gives
 
-`Result`: `actions` and `warnings`.
+`Result`: `actions`, `warnings`, and `waited`, `{ heat pump => whether
+it waits }` ([pump wait](short-cycles.md#the-pump-wait)), which the
+caller keeps and gives back as `PumpState#waited` at the next plan.
 
 | `Action` field | What it is                                                           |
 | :------------- | :------------------------------------------------------------------- |
@@ -172,7 +174,9 @@ What the caller knows of a heat pump, by its name in `pumps:`:
 | `held`         | a direction set outside the planner and held: `:heat`, `:cool`, or nil for neither; none by default |
 | `running`      | whether its compressor runs now; nil, taken as whether one of its units is on                       |
 | `switched_ago` | minutes since it last started or stopped (nil: unknown)                                             |
+| `waited`       | whether the last plan had it wait (`Result#waited`; nil: unknown, taken as not)                     |
 
 `held` decides the direction ([heat pumps](heat-pumps.md#a-direction-held));
 `running` and `switched_ago` the [hysteresis](heat-pumps.md#changing-direction)
-and the [least times](short-cycles.md#least-times).
+and the [least times](short-cycles.md#least-times); `waited` keeps the
+[pump wait](short-cycles.md#the-pump-wait) through `wait_kept`.

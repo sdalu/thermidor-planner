@@ -7,10 +7,11 @@ module Thermidor
         # Source::FREE for none); running, whether its compressor runs now
         # (nil: unknown, taken as whether one of its units is on);
         # switched_ago, minutes since it last started or stopped (nil:
-        # unknown).
-        PumpState = Data.define(:held, :running, :switched_ago) do
+        # unknown); waited, whether its last plan had it wait, mild
+        # (Result#waited; nil: unknown, taken as not).
+        PumpState = Data.define(:held, :running, :switched_ago, :waited) do
             def initialize(held: Source::FREE, running: nil,
-                           switched_ago: nil)
+                           switched_ago: nil, waited: nil)
                 super
             end
         end
@@ -51,9 +52,24 @@ module Thermidor
 
             def rested = @rested || []
 
+            # Whether it waits (PumpSettings wait_above): heating, every
+            # room's temperature known, mild by every room on the pump
+            # that gives an outside temperature, one at least giving one;
+            # a pump that waited last (PumpState#waited) waits until
+            # wait_kept below wait_above.
+            def waiting?
+                return false unless direction == :heat
+                outsides = @outsides ||
+                           @entries.filter_map { |room, _, _| room.outside }
+                waited = @state.waited == true
+                outsides.any? &&
+                    outsides.all? { @settings.wait?(it, waited:) } &&
+                    @entries.all? { |room, _, _| room.temperature }
+            end
+
             # { [zone, unit label] => target, nil or KEEP }.
             def targets
-                found = wait? ? gapped : @entries
+                found = waiting? ? gapped : @entries
                 held(found).to_h do |room, unit, target|
                     [[room.zone, unit.label], target]
                 end
@@ -66,17 +82,6 @@ module Thermidor
             def running?
                 return @state.running == true unless @state.running.nil?
                 @entries.any? { |_, unit, _| unit.on }
-            end
-
-            # Mild weather, heating, every room's temperature known: mild
-            # by every room on the pump that gives an outside temperature,
-            # one at least giving one.
-            def wait?
-                return false unless direction == :heat
-                outsides = @outsides ||
-                           @entries.filter_map { |room, _, _| room.outside }
-                outsides.any? && outsides.all? { @settings.wait?(it) } &&
-                    @entries.all? { |room, _, _| room.temperature }
             end
 
             # Running, until no room is under its unit's target, then every

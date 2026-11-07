@@ -117,8 +117,11 @@ module Thermidor
         end
 
         # actions: Action, ...; warnings: Notice, ..., a translation's
-        # notes after them as it gave them.
-        Result = Data.define(:actions, :warnings)
+        # notes after them as it gave them; waited: { heat pump => whether
+        # it waits, mild }, for the next plan's PumpState#waited.
+        Result = Data.define(:actions, :warnings, :waited) do
+            def initialize(waited: {}, **) = super
+        end
     end
 end
 

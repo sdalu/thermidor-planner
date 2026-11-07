@@ -22,19 +22,25 @@ until set:
 | `backup_within` | 1.0     | how far under its band a room still lets its radiators lead                    |
 | `backup_kept`   | 0.5     | how far under `backup_above` radiators leading already keep the lead           |
 | `backup_under`  | 0.5     | how far under its restart point a backup radiator sits ([waiting](#waiting))   |
+| `wait_kept`     | 0.5     | how far under `wait_above` a pump waiting already keeps waiting                |
 
-`PumpSettings` refuses a negative value, and a nil `wait`,
-`urgent`, `backup_within` or `backup_kept`, with `ArgumentError`
-(`backup_under` nil is off). An unknown outside
-temperature, room temperature or `switched_ago` leaves the plan as it
-would be without the setting.
+`PumpSettings` refuses a negative value, and a nil `wait`, `urgent`,
+`backup_within`, `backup_kept` or `wait_kept`, with `ArgumentError`
+(`backup_under` nil is off). An unknown outside temperature, room
+temperature or `switched_ago` leaves the plan as it would be without
+the setting.
 
 ## The pump wait
 
 The pump wait holds when the heat pump heats, `room.outside` is at or
 above `wait_above` in every room on it that gives one (its units planned or
 not: one unread still says the weather), at least one does, and every
-room whose unit is planned has its temperature known.
+room whose unit is planned has its temperature known. A heat pump that
+waited at the last plan (`PumpState#waited`, which the caller keeps
+from `Result#waited`) keeps waiting until the outside falls
+`wait_kept` under `wait_above`, so an outside hovering there does not
+switch its units off and on at each plan; not known, it waits from
+`wait_above`.
 
 - Stopped, the heat pump starts only once a room on it is more than
   `wait` under its unit's target; then every unit whose room
