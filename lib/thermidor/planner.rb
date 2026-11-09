@@ -125,8 +125,15 @@ module Thermidor
         # actions: Action, ...; warnings: Notice, ..., a translation's
         # notes after them as it gave them; waited: { heat pump => whether
         # it waits, mild }, for the next plan's PumpState#waited.
-        Result = Data.define(:actions, :warnings, :waited) do
-            def initialize(waited: {}, **) = super
+        # targets: { zone => { radiator label => the room-scale target its
+        # radiators were planned to (nil: not heating) } }, as
+        # Strategy.heat gives it but after the pump wait, before the
+        # translation and the device's step; overrides: { zone => {
+        # device label => [what overrode the room's strategy for it, as
+        # its actions' why says] } }.
+        Result = Data.define(:actions, :warnings, :waited, :targets,
+                             :overrides) do
+            def initialize(waited: {}, targets: {}, overrides: {}, **) = super
         end
     end
 end

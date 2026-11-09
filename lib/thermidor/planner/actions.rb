@@ -16,6 +16,14 @@ module Thermidor
 
             def to_a = @list.dup
 
+            # { zone => { device label => [what overrode the room's
+            # strategy for it] } }, as noted.
+            def overrides
+                @notes.each_with_object({}) do |((zone, device), said), all|
+                    (all[zone] ||= {})[device] = said.dup
+                end
+            end
+
             # notes: { [zone, device label] => [what overrode the room's
             # strategy for that device], ... } (PumpCycle#notes).
             def noted(notes) = @notes.merge!(notes)

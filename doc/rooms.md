@@ -95,6 +95,13 @@ temperature.
 `Result`: `actions`, `warnings`, and `waited`, `{ heat pump => whether
 it waits }` ([pump wait](short-cycles.md#the-pump-wait)), which the
 caller keeps and gives back as `PumpState#waited` at the next plan.
+`targets`, `{ zone => { radiator label => target } }`, is what each
+room's radiators were planned to on the room's scale: `Strategy.heat`'s
+target after the pump wait lowered it, before the translation and the
+device's step (nil: not heating). `overrides`, `{ zone => { device label
+=> [sentence, ...] } }`, is what overrode the room's strategy for a
+device, as its actions' `why` says it (`backup 18.5 while the pump
+waits`); a device with no action still has its line.
 
 | `Action` field | What it is                                                           |
 | :------------- | :------------------------------------------------------------------- |

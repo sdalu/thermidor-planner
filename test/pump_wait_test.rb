@@ -25,6 +25,27 @@ class PumpWaitTest < Minitest::Test
                       "+20.0..+26.0, at 19.6"], result.actions.map(&:why)
     end
 
+    # What the plan heats the room to, before the valve's own sensor
+    # and step, and why: the 18.5 its action writes, not the 19.0
+    # Strategy.heat gives.
+    def test_the_result_says_the_room_scale_target_and_why
+        result = plan(room(19.6), pump)
+        assert_equal({ "valve:a" => 19.0 },
+                     Strategy.heat(room(19.6), pump).slice("valve:a"))
+        assert_equal({ "a" => { "valve:a" => 18.5 } }, result.targets)
+        assert_equal({ "a" => {
+                         "unit:a" => ["pump wait"],
+                         "valve:a" => ["backup 18.5 while the pump waits"]
+                     } }, result.overrides)
+    end
+
+    def test_off_the_result_says_the_strategy_s_target
+        result = plan(room(19.6), pump(backup_under: nil))
+        assert_equal({ "a" => { "valve:a" => 19.0 } }, result.targets)
+        assert_equal({ "a" => { "unit:a" => ["pump wait"] } },
+                     result.overrides)
+    end
+
     # Under the restart point the pump starts; the comfort gap is back.
     def test_once_the_pump_starts_the_gap_is_the_strategy_s
         result = plan(room(18.9), pump)

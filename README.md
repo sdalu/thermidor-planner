@@ -70,8 +70,10 @@ it, and the unit's setpoint is written for the mode it will run in.
 - The strategies: `comfort`, `quick`, `quiet`, `cheapest`.
 - `#run` gives a `Result`: `actions`, each an `Action` (a device's
   mode, power, target or setpoint, from what it is to what it should
-  be, and why), `warnings`, each a `Notice`, and `waited`, whether
-  each heat pump waits, for the next plan's `PumpState`.
+  be, and why), `warnings`, each a `Notice`, `waited`, whether
+  each heat pump waits, for the next plan's `PumpState`, and
+  `targets` and `overrides`, each radiator's room-scale target and
+  what overrode its strategy, for a caller saying why.
 - `Drifts`: the settings changed outside the plan, and the band that
   holds what was set.
 

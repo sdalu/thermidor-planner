@@ -63,7 +63,8 @@ module Thermidor
             def result
                 Result.new(actions: @actions.to_a,
                            warnings: @warnings + @translation.notes,
-                           waited: @waited)
+                           waited: @waited, targets: @targets,
+                           overrides: @actions.overrides)
             end
 
             # The room with its units (read) of a system set aside held,
@@ -79,12 +80,14 @@ module Thermidor
 
             # cut: { zone => the heat pumps leaving it needing heat };
             # waits: { zone => its units' highest target } on a heat pump
-            # waiting, mild and stopped (PumpCycle#waits).
+            # waiting, mild and stopped (PumpCycle#waits); targets: {
+            # zone => its radiators' room-scale targets } (Result#targets).
             def start
                 @actions  = Actions.new(@settings)
                 @warnings = []
                 @waits    = {}
                 @waited   = {}
+                @targets  = {}
                 @cut      = Hash.new { |hash, zone| hash[zone] = [] }
             end
 
