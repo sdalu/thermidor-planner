@@ -76,6 +76,10 @@ it, and the unit's setpoint is written for the mode it will run in.
   what overrode its strategy, for a caller saying why.
 - `Drifts`: the settings changed outside the plan, and the band that
   holds what was set.
+- `EarlyStart`: whether a room starts a change ahead of its time, so
+  it is in the band at the change, from the minutes until it, the rates
+  the caller learned and the costs ahead; the band and strategy to hold
+  meanwhile.
 
 ## Known shortfalls
 
@@ -97,5 +101,6 @@ it, and the unit's setpoint is written for the mode it will run in.
 | [Short cycles](doc/short-cycles.md)    | the pump wait, the least times, urgent rooms                         |
 | [Held devices and drifts](doc/held.md) | devices switched by hand, and settings changed outside the plan      |
 | [Warnings](doc/warnings.md)            | each `Notice` kind and its sentence                                  |
+| [Early start](doc/early-start.md)      | starting a change ahead of its time, its rates, costs and notes      |
 
 Why it is shaped so: [DESIGN.md](DESIGN.md).

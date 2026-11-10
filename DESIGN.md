@@ -242,3 +242,36 @@ caller's policy, so it stays there. A drift no band can hold (a unit
 switched on, a setpoint in fan) gets none rather than one guessed. A system's mode changing makes its
 units report the other mode's setpoint, so those are not drifts of
 their own.
+
+## Early start without a clock
+
+A timetable holds the times rooms are used, so a change has to begin
+before its time. When is planning, so it is the planner's; but the
+planner has no clock and learns nothing, so the caller gives the
+minutes until each change and until its next plan, and the rates it
+learned (`Rise`). The step gives a band and a strategy, which the
+caller holds in a layer of its own in the schedule's stack, under the
+holds made by hand, the open window and the guards: which layer
+decides is the stack's order, not a rule of early start's.
+
+A warm-up started goes on until its change whatever the room does: a
+room warming faster than its rate would otherwise drop back to the band
+now at the next plan and start again. The planner keeps no memory, so
+the latch is the caller's to give back (`Ahead#started`), as the pump
+wait's is. It holds every side of the band ahead that asks more,
+whatever the room reads: a latch choosing the side nearer the room
+flipped between the two as a warm-up overshot the band's middle, the
+back and forth it is there to stop, while a cool side held during a
+heating warm-up does nothing to a room under it. A side held is said
+only while it still has work to do. And it holds the strategy chosen,
+so a switch to quick when late (`hurry`) is decided once, never
+switched back and forth.
+
+Costs time a warm-up under cheapest only: a comfort room heated from
+04:00 for cheap hours would undo what comfort was chosen for. The heat
+compared is in the room's own capacity, which cancels between starts,
+so the rates already learned price it with no figure more. The latest
+start on cheapest's own devices is the baseline, and an earlier or a
+quick one wins only by the cost margin cheapest already has, so a
+warm-up is not moved for a cent. Why each choice, and ClimatControl's
+side: [design/early-start.md](design/early-start.md).
