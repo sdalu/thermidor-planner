@@ -84,22 +84,26 @@ module Thermidor
                 due.min_by { [it.ahead.band.cool, it.ahead.minutes] }
             end
 
-            # The band now, each side moved to the most demanding due one's;
-            # the driver's whole when the sides come closer than the
-            # deadband.
+            # The band now, each side moved to the most demanding of the due
+            # changes' sides asking more, all of them, as the latch then
+            # holds them (WarmUp); the driver's whole when the sides come
+            # closer than the deadband.
             def band(room, due, driver)
                 now = room.band
-                heat = [now&.heat, *sided(due, :heat)].compact.max
-                cool = [now&.cool, *sided(due, :cool)].compact.min
+                aheads = due.map(&:ahead).uniq
+                heat = [now&.heat, *asking(aheads, now, :heat, 1)].compact.max
+                cool = [now&.cool, *asking(aheads, now, :cool, -1)].compact.min
                 return Schedule::Setpoint.new(heat:, cool:) unless now
                 now.with(heat:, cool:)
             rescue Schedule::Error
                 driver.ahead.band
             end
 
-            def sided(due, side)
-                due.select { it.side == side }
-                   .map { it.ahead.band.public_send(side) }
+            def asking(aheads, now, side, sign)
+                aheads.filter_map do |one|
+                    value = one.band.public_send(side)
+                    value if more?(value, now&.public_send(side), sign)
+                end
             end
         end
     end

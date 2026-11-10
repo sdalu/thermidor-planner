@@ -41,7 +41,7 @@ early.start(red, ahead: [P::Ahead.new(minutes: 150, band: wake,
 due = early.start(red, ahead: [P::Ahead.new(minutes: 140, band: wake,
                                             strategy: :comfort)],
                        rates:, next_in: 10)
-due.band.to_s       # => "+20.0..+27.0"
+due.band.to_s       # => "+20.0..+25.0"
 due.strategy        # => :comfort
 due.minutes.round   # => 131
 due.notes.first.to_s
@@ -49,8 +49,8 @@ due.notes.first.to_s
 ```
 
 At 150 min, starting at the next plan, 10 min on, is still in time:
-nothing starts. At 140 it is not: the warm-up starts, the heat side
-moved to the wakeup's, the cool side kept the night's.
+nothing starts. At 140 it is not: the warm-up starts, both sides moved
+to the wakeup's, as the latch will hold them.
 
 ## What it takes
 
@@ -108,9 +108,11 @@ reaching the aim takes from now, `notes`.
 - **Which strategy**: `warmup`, or the change's; with `hurry`, quick
   when that one is late or capped and quick's devices are faster, chosen
   once when it starts.
-- **Several changes**: each side moves to the most demanding due one's;
-  the highest heat side drives the strategy and `Start#ahead`. Sides
-  closer than the deadband take the driver's band whole.
+- **Several changes**: each side moves to the most demanding of the due
+  changes' sides asking more, all of them from the first start, as the
+  latch then holds them; the highest heat side drives the strategy and
+  `Start#ahead`. Sides closer than the deadband take the driver's band
+  whole.
 
 ## Costs
 
@@ -128,7 +130,8 @@ leaves the start to the rate, said.
 ## Notes
 
 `Start#notes` are `Notice`s, apart from a plan's warnings: their
-`kind` and `zone`. The caller adds the clock time.
+`kind`, `zone`, and `ahead`, the change each is about. The caller adds
+the clock time.
 
 | Kind                 | Sentence                                                                  |
 | :------------------- | :------------------------------------------------------------------------ |
@@ -142,3 +145,4 @@ leaves the start to the rate, said.
 | `:early_uncosted`    | `red: early start for +20.0 by its rate: no cost for valve:VA1 at 60 min` |
 | `:early_unrated`     | `red: no early start for +20.0: no rate for radiators`                    |
 | `:early_unread`      | `red: no early start for +20.0: room temperature unknown`                 |
+|                      | `red: early start for +20.0 held: room temperature unknown` (started)     |

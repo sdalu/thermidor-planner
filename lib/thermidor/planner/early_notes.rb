@@ -8,7 +8,7 @@ module Thermidor
             private
 
             def note(kind, said)
-                Notice.new("#{zone}: #{said}", kind:, zone:)
+                Notice.new("#{zone}: #{said}", kind:, zone:, ahead: @ahead)
             end
 
             def degrees(value) = format("%+.1f", value)
@@ -67,9 +67,12 @@ module Thermidor
                      "no early start for #{degrees(side)}: #{why}")
             end
 
+            # Held, the warm-up goes on, and says so.
             def unread_note
-                note(:early_unread, "no early start for #{degrees(side)}: " \
-                                    "room temperature unknown")
+                said = if @started then "#{for_side} held"
+                       else "no early start for #{degrees(side)}"
+                       end
+                note(:early_unread, "#{said}: room temperature unknown")
             end
         end
     end

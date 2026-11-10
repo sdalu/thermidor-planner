@@ -23,7 +23,7 @@ class EarlyStartTest < Minitest::Test
     def test_the_worked_case
         assert_nil start(room, ahead(150)).ahead
         due = start(room, ahead(140))
-        assert_equal "+20.0..+27.0", due.band.to_s
+        assert_equal "+20.0..+25.0", due.band.to_s
         assert_equal :comfort, due.strategy
         assert_in_delta 131.2, due.minutes, 0.1
     end

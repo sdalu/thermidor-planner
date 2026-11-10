@@ -662,7 +662,13 @@ What building it changed in this design, 2026-11-10:
 - **A held side says nothing** once past its aim or without a rate: no
   "no early start" for a warm-up that goes on.
 - **Unread is said once**, on the heat side (a band's only side when it
-  has one), not once per side.
+  has one), not once per side; a warm-up held unread says it is held.
+- **The first start gives the band the latch holds**: every side of a
+  due change asking more, not only the side with work to do, so the
+  caller's entry is written once, not rewritten at the next plan
+  (ClimatControl's tests found it).
+- **Each note carries its change** (`Notice#ahead`), so the caller ties
+  it to the change's time without asking the step again.
 - **`hurry` is a boolean**, refused otherwise: a setting's text `"on"`
   would have been read as off.
 - **The cost baseline** is the latest start in time on the warm-up's own

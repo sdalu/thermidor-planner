@@ -11,6 +11,7 @@ rather than parsing the words.
 | `zone`   | the room's zone it is about, nil for none              |
 | `device` | a device's label or a system's, nil for none           |
 | `source` | a heat pump's name, as its units give it, nil for none |
+| `ahead`  | the change an early start's note is about (`Ahead`)    |
 
 The translation's `notes` come after the notices, as it gave them: they
 are its own, not `Notice`s.

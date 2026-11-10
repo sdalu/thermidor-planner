@@ -58,7 +58,29 @@ class EarlyStartBandsTest < Minitest::Test
     # Only a side asking more moves: a heat side ahead higher, the cool
     # side kept the band now's.
     def test_only_the_side_asking_more_moves
-        assert_equal "+20.0..+27.0", start(room, ahead(130)).band.to_s
+        warmer = ahead(130, band: S::Setpoint.new(heat: 20, cool: 28))
+        assert_equal "+20.0..+27.0", start(room, warmer).band.to_s
+    end
+
+    # The first start gives the band the latch then holds: every side
+    # asking more, so the caller writes it once.
+    def test_the_first_start_gives_the_band_held
+        first = start(room, ahead(130)).band.to_s
+        held = start(room, ahead(120, started: :comfort)).band.to_s
+        assert_equal ["+20.0..+25.0"] * 2, [first, held]
+    end
+
+    def test_an_unread_warm_up_held_says_so
+        unread = room.with(measured: nil, radiators: [valve(nil, nil)])
+        kept = start(unread, ahead(100, started: :comfort))
+        assert_equal ["red: early start for +20.0 held: room temperature " \
+                      "unknown"], kept.notes
+    end
+
+    # Each note says the change it is about.
+    def test_the_notes_carry_their_change
+        change = ahead(140)
+        assert_equal [change], start(room, change).notes.map(&:ahead)
     end
 
     # Sides closer than the deadband take the band ahead whole.
