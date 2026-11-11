@@ -58,21 +58,31 @@ module Thermidor
         # the cheapest); outside: the outside °C now, nil unknown, for the
         # pump's mild-weather settings (PumpSettings); led: the labels of
         # the devices that led it last, nil unknown, for cheapest's cost
-        # margin (StrategySettings).
+        # margin (StrategySettings); gap: how far under the lead its other
+        # devices come in (°C), its own over the house's
+        # (StrategySettings#comfort), nil for the house's.
         ROOM_DEFAULTS = { excluded: [], measured: nil, location: nil,
                           held: [], effects: Effects.none,
-                          costs: {}, outside: nil, led: nil }.freeze
+                          costs: {}, outside: nil, led: nil,
+                          gap: nil }.freeze
 
         Room = Data.define(:zone, :band, :strategy, :radiators, :aircons,
                            :excluded, :measured, :location, :held,
-                           :effects, :costs, :outside, :led) do
+                           :effects, :costs, :outside, :led, :gap) do
             # A strategy is a Symbol (or a name StrategySettings may
             # alias): none is refused.
             def initialize(**given)
                 raise ArgumentError, "#{given[:zone]}: no strategy" if
                     given[:strategy].nil?
+                if given[:gap]&.negative?
+                    raise ArgumentError,
+                          "#{given[:zone]}: negative gap #{given[:gap]}"
+                end
                 super(**ROOM_DEFAULTS, **given)
             end
+
+            # Its comfort gap: its own, else the house's.
+            def gap_in(settings) = gap || settings.comfort
 
             # Every device, held or not.
             def devices = radiators + aircons + held

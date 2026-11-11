@@ -82,6 +82,7 @@ best of its class ([strategies](strategies.md#devices-without-caps)).
 | `costs`    | what a kWh of heat costs from each device now, by label, any one unit (`{}`)        |
 | `outside`  | the outside °C now (nil: unknown)                                                   |
 | `led`      | the labels of the devices that led it last, at the band (nil: unknown)              |
+| `gap`      | its own comfort gap (°C), over the house's `StrategySettings#comfort` (nil: the house's) |
 | `held`     | its devices switched outside the planner (`[]`; [held devices](held.md))            |
 
 `Room#temperature` is `measured`, else its devices' readings averaged

@@ -89,7 +89,7 @@ module Thermidor
                 case settings.rule(strategy) || Strategy::FALLBACK
                 when :quick then by { 0.0 }
                 when :quiet then by { it.caps.quiet ? 0.0 : nil }
-                when :comfort then comfort(settings.comfort)
+                when :comfort then comfort(@room.gap_in(settings))
                 else cheapest(settings.cost_margin)
                 end
             end
@@ -100,7 +100,7 @@ module Thermidor
 
             def effected(planned, settings)
                 energies = @parts.to_h { |_, one| [one.label, one.caps.energy] }
-                @effects.apply(planned, energies, settings.comfort)
+                @effects.apply(planned, energies, @room.gap_in(settings))
             end
 
             def by = @parts.to_h { |_, device| [device.label, yield(device)] }

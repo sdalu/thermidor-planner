@@ -54,7 +54,10 @@ Gentleness is the first of `caps.propagation`: `radiation` and
 devices heat at the band's heat side; the others a gap behind, the
 settings' `comfort` (0.5 °C), so they join once the room has fallen
 that far. The gap is comfort's one setting (`Strategy.settings`,
-described in `Strategy::FIELDS`).
+described in `Strategy::FIELDS`). A room may give its own
+(`Room#gap`), which it uses wherever a backup comes a gap behind: under
+comfort, behind a preferred energy, and behind the radiators leading in
+mild weather; nil takes the house's.
 
 `Strategy.uses(name, settings, caps, costs: {})` says what a strategy
 does with one device of each class of the given caps, the lead first,

@@ -17,7 +17,7 @@ module Thermidor
                 @room  = room
                 @parts = parts
                 @pump  = settings.pump
-                @gap   = settings.comfort
+                @gap   = room.gap_in(settings)
             end
 
             # planned ({ device label => offset or nil }) with the
