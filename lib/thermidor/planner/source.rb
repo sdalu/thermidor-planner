@@ -29,13 +29,13 @@ module Thermidor
             # caller knows of it (PumpState): a direction held, whether its
             # compressor runs.
             def initialize(name, rooms, current,
-                           settings = StrategySettings.new,
+                           strategies = StrategyCache.new,
                            state: PumpState.new)
-                @name     = name
-                @settings = settings
-                @pump     = settings.pump
-                @current  = current
-                @running  = running?(state, rooms)
+                @name       = name
+                @strategies = strategies
+                @pump       = strategies.settings.pump
+                @current    = current
+                @running    = running?(state, rooms)
                 vote(state.held, rooms)
             end
 
@@ -108,7 +108,7 @@ module Thermidor
             # Whether the strategy has one of room's units on this heat
             # pump heat.
             def heats?(room)
-                targets = Strategy.heat(room, @settings)
+                targets = @strategies.heat(room)
                 own(room).any? { targets[it.label] }
             end
 

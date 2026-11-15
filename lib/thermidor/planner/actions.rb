@@ -8,10 +8,10 @@ module Thermidor
         # and for a target or setpoint the translation's offset; a heat
         # pump's mode, its source.
         class Actions
-            def initialize(settings = StrategySettings.new)
-                @settings = settings
-                @list     = []
-                @notes    = {}
+            def initialize(strategies = StrategyCache.new)
+                @strategies = strategies
+                @list       = []
+                @notes      = {}
             end
 
             def to_a = @list.dup
@@ -52,7 +52,7 @@ module Thermidor
 
             def why(room, device)
                 reading = ", at #{room.reading}" if room.reading
-                said = [room.strategy, *Strategy.notes(room, @settings),
+                said = [room.strategy, *@strategies.notes(room),
                         *@notes[[room.zone, device]], room.band]
                 "#{said.join(", ")}#{reading}"
             end

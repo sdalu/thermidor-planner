@@ -95,6 +95,16 @@ A translation is asked of each device, not of its class: two radiators
 in one room may sit by sensors that read the room differently, and only
 the caller knows which share one.
 
+A room's strategy depends on the room and the settings alone, yet a
+plan asks for it again for each heat pump that room votes on, for its
+radiators, and for each action's why. One plan works it out once per
+room (`StrategyCache`), keyed by the room object itself rather than its
+value: hashing a room by value costs about what working its strategy
+out does, and a room changed with `with` is a new object, so it is
+never mistaken for the old one. The cache lives as long as a run, so no
+plan sees another's. `Strategy.heat` stays the uncached call for
+callers outside a plan.
+
 ## One direction a heat pump
 
 Units on one outdoor unit cannot heat and cool at once. The direction

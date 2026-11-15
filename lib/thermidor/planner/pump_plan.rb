@@ -25,7 +25,7 @@ module Thermidor
             # plan: one switched off by hand cannot use it, nor one of a
             # system set aside, held from the start (Plan#holding_aside).
             def source(name, rooms)
-                Source.new(name, rooms, current(rooms, name), @settings,
+                Source.new(name, rooms, current(rooms, name), @strategies,
                            state: @pumps[name] || PumpState.new)
             end
 
@@ -125,7 +125,7 @@ module Thermidor
             # nil for off }: a unit that cannot cool has none to cool.
             def aircon_targets(room, direction)
                 return {} if direction.nil? || room.need == opposite(direction)
-                return Strategy.heat(room, @settings) if direction == :heat
+                return @strategies.heat(room) if direction == :heat
                 room.aircons.to_h do |unit|
                     [unit.label, (room.band&.cool if Roles.cools?(unit))]
                 end

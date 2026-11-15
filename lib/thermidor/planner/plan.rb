@@ -83,12 +83,13 @@ module Thermidor
             # waiting, mild and stopped (PumpCycle#waits); targets: {
             # zone => its radiators' room-scale targets } (Result#targets).
             def start
-                @actions  = Actions.new(@settings)
-                @warnings = []
-                @waits    = {}
-                @waited   = {}
-                @targets  = {}
-                @cut      = Hash.new { |hash, zone| hash[zone] = [] }
+                @strategies = StrategyCache.new(@settings)
+                @actions    = Actions.new(@strategies)
+                @warnings   = []
+                @waits      = {}
+                @waited     = {}
+                @targets    = {}
+                @cut        = Hash.new { |hash, zone| hash[zone] = [] }
             end
 
             # The room as its radiators are planned: without the units of
@@ -110,7 +111,7 @@ module Thermidor
                 return unless room.need == :heat
                 read = (room.radiators + room.aircons).select(&:mode)
                 return if read.empty?
-                return if Strategy.heat(room, @settings).values.any?
+                return if @strategies.heat(room).values.any?
                 why = unheated_why(room, read)
                 notice("#{room.zone}: needs heat, but #{why}",
                        kind: :unheated, zone: room.zone)

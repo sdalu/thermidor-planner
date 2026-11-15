@@ -122,28 +122,35 @@ module Thermidor
             # radiators and units: the strategy's rule over each device's
             # capabilities (Roles); all nil without a band.
             def heat(room, settings = StrategySettings.new)
-                heat = room.band&.heat
-                offsets = heat ? offsets(room, heat, settings) : {}
-                (room.radiators + room.aircons).to_h do |device|
-                    offset = offsets[device.label]
-                    [device.label, offset && (heat + offset).round(1)]
-                end
-            end
-
-            def offsets(room, heat, settings)
-                roles(room, heat).offsets(room.strategy.to_sym, settings)
+                targets(room, roles_of(room), settings)
             end
 
             # What overrode the room's strategy, for an action's why: the
             # pump backup when it changed the lead (Roles#backup_note); none
             # without a band.
             def notes(room, settings = StrategySettings.new)
-                heat = room.band&.heat or return []
-                [roles(room, heat).backup_note(room.strategy.to_sym, settings)]
-                    .compact
+                overrides(room, roles_of(room), settings)
             end
 
-            def roles(room, heat)
+            # heat, from the room's roles (roles_of) already worked out.
+            def targets(room, roles, settings)
+                heat = room.band&.heat
+                offsets = roles&.offsets(room.strategy.to_sym, settings) || {}
+                (room.radiators + room.aircons).to_h do |device|
+                    offset = offsets[device.label]
+                    [device.label, offset && (heat + offset).round(1)]
+                end
+            end
+
+            # notes, from the room's roles (roles_of) already worked out.
+            def overrides(room, roles, settings)
+                return [] unless roles
+                [roles.backup_note(room.strategy.to_sym, settings)].compact
+            end
+
+            # The room's Roles at its band's heat side; nil without one.
+            def roles_of(room)
+                heat = room.band&.heat or return
                 Roles.new(room, heat, room.excluded, room.effects)
             end
         end
