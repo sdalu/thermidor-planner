@@ -14,3 +14,8 @@ group :development, :test do
     gem "rake", "~> 13.2"
     gem "rubocop", "~> 1.90"
 end
+
+# The sampling profiler, out of the suite's group so the gate never loads it.
+group :development do
+    gem "stackprof", "~> 0.2.28"
+end
